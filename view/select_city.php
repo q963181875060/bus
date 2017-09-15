@@ -37,34 +37,40 @@ var _hmt = _hmt || [];
 
     <div class="header-title">
 		<?php
-			if(isset($_SESSION['city_direction']) && $_SESSION['city_direction']==0){
-				//选择出发城市
-				echo '选择出发城市';
+			//如果没按正常流程到此页面，则跳转到首页
+			if(!isset($_SESSION['city_direction'])){
+				Header("HTTP/1.1 303 See Other"); 
+				Header("Location: index.php"); 
+				exit; 
 			}
-			if(isset($_SESSION['city_direction']) && $_SESSION['city_direction']==1){
-				//选择到达城市
+				
+			if($_SESSION['city_direction']==0){
+				echo '选择出发城市';
+			}else{
 				echo '选择到达城市';
 			}
 		?> 	
 	</div>
 </div>
 
-<div class="cities-title">当前城市</div>
+<!--<div class="cities-title">当前城市</div>
 <ul class="cities" id="current_city"><li><a href="http://guangyunbus.com/index.php/Index/index/from_city/1">深圳</a></li></ul>
 
-<div class="clear" style="height:10px"></div>
+<div class="clear" style="height:10px"></div>-->
 
 <div class="cities-title">已开通城市</div>
 
 <ul class="cities" id="city_list">
 	<?php
-		if(isset($_SESSION['city_direction']) && $_SESSION['city_direction']==0){
-			//选择出发城市
-			echo '<li><a href="javascript:void(0)" onclick="select_city(\'青岛\')">青岛</a></li>';
-		}
-		if(isset($_SESSION['city_direction']) && $_SESSION['city_direction']==1){
-			//选择到达城市
-			echo '<li><a href="javascript:void(0)" onclick="select_city(\'广州\')">广州</a></li>';
+		include 'logicController.php';
+		$data = get_select_city_data();
+		foreach($data as $city){
+			if($_SESSION['city_direction']==0){
+				echo '<li><a onclick="select_city(\''.$city['from_city'].'\')">'.$city['from_city'].'</a></li>';
+			}else{
+				echo '<li><a onclick="select_city(\''.$city['to_city'].'\')">'.$city['to_city'].'</a></li>';
+			}
+			
 		}
 	?> 
 </ul>
@@ -74,18 +80,18 @@ var _hmt = _hmt || [];
 <script type="text/javascript">
     var latitude = '';
     var longitude = '';
-	var tmp_req_url = 'http://139.199.105.54/bus/controller/clientController.php';
+	var tmp_req_url = 'clientController.php';
 	var AJAX_TIMEOUT = 2000;
 
 	function select_city(selected_city){
 		var post_data = {};	
 		post_data['action'] = 'goto_index';
-		post_data['selected_city'] = selected_city;
-		
+		post_data['selected_city'] = $.trim(selected_city);
 		
 		$.ajax({
             type        : 'post',
             url         : tmp_req_url,
+			async		: false,
             data        : { 'request'   : JSON.stringify(post_data) },
             dataType    : 'json',
             success     : function(data) {
@@ -165,59 +171,8 @@ var _hmt = _hmt || [];
 </script>
 
 
-<div class="navigation-bar">
-    <div>
-        <a href="http://guangyunbus.com/index.php/Index/index">
-            <p><img src="pic/home.png" alt=""></p>
-            <p>首页</p>
-        </a>
-    </div>
-
-	<!--<div>
-        <a href="/index.php/User/share">
-            <p><img src="/Public/app/images/share.png" alt="" /></p>
-            <p>分享</p>
-        </a>
-    </div>-->
-
-
-	
-   <!-- <div>
-        <a href="/index.php/Page/show/id/1">
-            <p><img src="/Public/app/images/about.png" alt="" /></p>
-            <p>关于</p>
-        </a>
-    </div>
-
-    <div>
-        <a href="/index.php/Page/show/id/2">
-            <p><img src="/Public/app/images/contact.png" alt="" /></p>
-            <p>联系</p>
-        </a>
-    </div>-->
-
-    <div>
-        <a href="http://guangyunbus.com/index.php/User/orders">
-            <p><img src="pic/order.png" alt=""></p>
-            <p>订单</p>
-        </a>
-    </div>
-
-    <div>
-        <a href="http://guangyunbus.com/index.php/Page/show/id/3">
-            <p><img src="pic/icon05.png" alt=""></p>
-            <p>指南</p>
-        </a>
-    </div>
-    
-    <div>
-        <a href="http://guangyunbus.com/index.php/User/index">
-            <p><img src="pic/member.png" alt=""></p>
-            <p>我的</p>
-        </a>
-    </div>
-
-</div>
-
+<?php
+include 'nav_bar.php';
+?>
 
 </body></html>

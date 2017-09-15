@@ -38,7 +38,7 @@ var _hmt = _hmt || [];
 
 <?php
 	include 'logicController.php';
-	$data = get_book_data();
+	//$data = get_book_data();
 ?>
 
 <form id="form1" method="post" action="/index.php/Index/do_post">
@@ -46,41 +46,56 @@ var _hmt = _hmt || [];
         <li>
             <span>线路：</span>
 			<?php
-				echo $data['from_city'];
+				echo $_SESSION['from_city'];
 			?>
              &nbsp;
             <img src="pic/arrow_right_black.png" alt="" style="width:50px">
             &nbsp; 
 			<?php
-				echo $data['to_city'];
+				echo $_SESSION['to_city'];
 			?>			
 		</li>
         <li>
             <span>上车：</span>
             <?php
-				echo $data['from_stop'];
+				echo $_SESSION['from_stop'];
 			?>		
 		</li>
 		<li>
             <span>下车：</span>
             <?php
-				echo $data['to_stop'];
+				echo $_SESSION['to_stop'];
 			?>		
 		</li>
         <li>
             <span>时间：</span>
 			<?php
-				echo $data['start_date'].'&nbsp;'.$data['from_time'];
+				echo $_SESSION['start_date'].'&nbsp;'.$_SESSION['from_time'];
 			?>
+			<div id="is_expire" style="display:none;">
+			<?php
+				date_default_timezone_set('Asia/Shanghai');
+				if(strtotime($_SESSION['start_date'].' '.$_SESSION['from_time']) < time()){
+					echo "1";
+				}else{
+					echo "0";
+				}
+			?>
+			</div>
 		</li>
 
         <li>
                 <span>单张票价：</span>
                 <b class="price" style="font-size:22px;font-weight:500">¥
 				<?php
-					echo $data['price'];
+					echo $_SESSION['price'];
 				?>
 				</b>
+				<div id="single_price" style="display:none;">
+				<?php
+					echo $_SESSION['price'];
+				?>
+				</div>
                 <span style="display:none">（儿童 <b class="price">¥17.5</b> 元）</span>
             </li>
             <li>
@@ -150,6 +165,7 @@ var _hmt = _hmt || [];
                     <tbody><tr>
                         <td><span>总价：</span></td>
                         <td class="text-right price" style="font-size:22px" id="price">¥0</td>
+						<div style="display:none;" id="total_price"></div>
                     </tr>
                 </tbody></table>
             </li>    </ul>
@@ -164,8 +180,8 @@ var _hmt = _hmt || [];
 
 <div class="navigation-footer" style="border-top: 1px solid #ddd;background: #eee;position: fixed;bottom: 0;left: 0;width: 100%;padding-top: 5px;padding-bottom: 5px;">
     <div class="container">
-        <div class="button submit" data-type="1">提 交 订 单</div>
-                </div>
+        <div class="button" onclick="buy_ticket()" data-type="1">提 交 订 单</div>
+	</div>
 </div>
 
 <div class="notice-box" id="child-tip">
@@ -192,14 +208,11 @@ var _hmt = _hmt || [];
     <p onclick="$(this).parent().hide()">知道了</p>
 </div>
 
-
-
-
-
-
-
-
 <script type="text/javascript">
+
+	var tmp_req_url = 'clientController.php';
+	var AJAX_TIMEOUT = 2000;
+
     //使用优惠券
     var use_coupon = false;
 
@@ -212,14 +225,47 @@ var _hmt = _hmt || [];
     //最大优惠价格
     var max_coupon_price = 0;
 
+	function buy_ticket(){
+		var num = $.trim($('input[name="num"]').val());
+		if(num == 0){
+			alert("请购买至少一张车票");
+			return;
+		}
+		if($.trim($('#is_expire').html()) == '1'){
+			if(!window.confirm('此班次的发车时间已过期，确认购买吗？')){
+                 return;
+            }
+		}
+		var post_data = {};	
+		post_data['action'] = 'book_ticket';
+		post_data['ticket_num'] = num;
+		
+		$.ajax({
+            type        : 'post',
+            url         : tmp_req_url,
+			async		: false,
+            data        : { 'request'   : JSON.stringify(post_data) },
+            dataType    : 'json',
+            success     : function(data) {
+				if(data['suc'] == 1){
+					window.location.href=data['url'];
+				}else{
+					alert(data['msg']);
+				}
+                
+            }
+        })
+	}
+	
     function calTotal() {
         var coupon_price = $('#coupon_price').val();
         var num = $.trim($('input[name="num"]').val());
         var child_num = $.trim($('input[name="child_num"]').val());
 
         var total = (price * num) + (price * child_discount * child_num) - coupon_price;
-
+		//alert(total);
         $('#price').html('&yen;' + total);
+		$('#total_price').html(total);
     }
 
     function select_payment(payment_id, jiage) {
@@ -274,16 +320,10 @@ var _hmt = _hmt || [];
     }
 
     function plus() {
-        var max_yuding = parseInt("3");
         var num = $.trim($('input[name="num"]').val());
 
         if (num == '') {
             num = 0;
-        }
-
-        if( num == max_yuding ) {
-            alert('车票数量超出可预订数量');
-            return false;
         }
 
         if (num >= 0) {
@@ -346,7 +386,8 @@ var _hmt = _hmt || [];
     var has_share = false;
     var price_type = "1";
     $(function(){
-
+		plus();
+		
         var is_lock = false;
         $('.submit').click(function(){
             //特价必须要分享到朋友圈才能提交
@@ -409,7 +450,7 @@ var _hmt = _hmt || [];
 
 <script>
     //默认微信支付
-    select_payment(1,35);
+    select_payment(1,parseFloat($('#single_price').html()).toFixed(1));
 </script>
 
 </body></html>

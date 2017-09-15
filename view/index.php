@@ -2,7 +2,7 @@
 <html><head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
-    <title>广运巴士</title>
+    <title>巴士</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
     <script src="js/hm.js"></script><script type="text/javascript" src="js/jquery-2.js"></script>
     <script type="text/javascript" src="js/jquery-form.js"></script>
@@ -67,7 +67,7 @@
 							if(isset($_SESSION['from_city'])){
 								echo $_SESSION['from_city'];
 							}else{
-								$_SESSION['from_city'] = '没有';
+								$_SESSION['from_city'] = '青岛';
 								echo $_SESSION['from_city'];
 							}
 						?> 
@@ -89,7 +89,7 @@
 							if(isset($_SESSION['to_city'])){
 								echo $_SESSION['to_city'];
 							}else{
-								$_SESSION['to_city'] = '没有';
+								$_SESSION['to_city'] = '请选择';
 								echo $_SESSION['to_city'];
 							}
 						?> 
@@ -106,14 +106,14 @@
                     <div class="hide-select-1">
                         <select name="yuding_date">
 							<?php
-								echo '<option value="2017-09-07" selected="selected">2017-09-07 (星期四)</option>
-							<option value="2017-09-08">2017-09-08 (星期五)</option>
-							<option value="2017-09-09">2017-09-09 (星期六)</option>
-							<option value="2017-09-10">2017-09-10 (星期日)</option>
-							<option value="2017-09-11">2017-09-11 (星期一)</option>
-							<option value="2017-09-12">2017-09-12 (星期二)</option>
-							<option value="2017-09-13">2017-09-13 (星期三)</option> ';
-							?> 
+								date_default_timezone_set('Asia/Shanghai');
+								$weekarray=array("日","一","二","三","四","五","六");							
+								for($i=0;$i<7;$i++){
+									echo '<option value="'.date('Y-m-d',strtotime('+'.$i.' day')).'" '. (($i==0)?'selected="selected"':'').'>'.
+											date('Y-m-d',strtotime('+'.$i.' day')).' (星期'.$weekarray[date('w',strtotime('+'.$i.' day'))].')'.
+										'</option>';
+								}
+							?>
                                                   
 						</select>
                     </div>
@@ -128,7 +128,7 @@
 
     <div class="clear"></div>
 
-    <div class="notice">
+    <div class="notice" style="display:none">
         <table>
             <tbody><tr>
                 <td style="width:30px"><img src="pic/Notice.png" alt=""></td>
@@ -144,7 +144,7 @@
         </table>
     </div>
 
-    <div class="history_order">
+    <div class="history_order" style="display:none;">
         <div class="history-title">快捷订票</div>
         <ul class="history-list">
             <li>
@@ -185,7 +185,7 @@
     });*/
     var latitude = '';
     var longitude = '';
-	var tmp_req_url = 'http://139.199.105.54/bus/controller/clientController.php';
+	var tmp_req_url = 'clientController.php';
 	var AJAX_TIMEOUT = 2000;
 	/*var from_city = '';
 	var city_direction = -1;
@@ -213,7 +213,7 @@
 	}*/
 	
 	function goto_select_city(city_direction){
-		if(city_direction == 1 && $('#from_city').html() == '' || $('#from_city').html() == '没有'){
+		if(city_direction == 1 && $('#from_city').html() == '' || $('#from_city').html() == '请选择'){
 			alert('请先选择出发城市！');
 			return;
 		}
@@ -240,23 +240,23 @@
 	
 	
     function line_search() {
-        var from_city = $('#from_city').html();
-        var to_city = $('#to_city').html();
-        var start_date = $('select[name="yuding_date"]').val();
+        var from_city = $.trim($('#from_city').html());
+        var to_city = $.trim($('#to_city').html());
+        var start_date = $.trim($('select[name="yuding_date"]').val());
 
-        if ($.trim(from_city) == '请选择') {
+        if (from_city == '请选择') {
             alert('请选择出发城市！');
 
             return false;
         }
 
-        if ($.trim(to_city) == '请选择') {
+        if (to_city == '请选择') {
             alert('请选择到达城市！');
 
             return false;
         }
 
-        if ($.trim(start_date) == '') {
+        if (start_date == '') {
             alert('请选择时间！');
 
             return false;
@@ -366,59 +366,9 @@
 
 </script>
 
-<div class="navigation-bar">
-    <div>
-        <a href="http://guangyunbus.com/index.php/Index/index">
-            <p><img src="pic/home_h.png" alt=""></p>
-            <p>首页</p>
-        </a>
-    </div>
-
-	<!--<div>
-        <a href="/index.php/User/share">
-            <p><img src="/Public/app/images/share.png" alt="" /></p>
-            <p>分享</p>
-        </a>
-    </div>-->
-
-
-	
-   <!-- <div>
-        <a href="/index.php/Page/show/id/1">
-            <p><img src="/Public/app/images/about.png" alt="" /></p>
-            <p>关于</p>
-        </a>
-    </div>
-
-    <div>
-        <a href="/index.php/Page/show/id/2">
-            <p><img src="/Public/app/images/contact.png" alt="" /></p>
-            <p>联系</p>
-        </a>
-    </div>-->
-
-    <div>
-        <a href="http://guangyunbus.com/index.php/User/orders">
-            <p><img src="pic/order.png" alt=""></p>
-            <p>订单</p>
-        </a>
-    </div>
-
-    <div>
-        <a href="http://guangyunbus.com/index.php/Page/show/id/3">
-            <p><img src="pic/icon05.png" alt=""></p>
-            <p>指南</p>
-        </a>
-    </div>
-    
-    <div>
-        <a href="http://guangyunbus.com/index.php/User/index">
-            <p><img src="pic/member.png" alt=""></p>
-            <p>我的</p>
-        </a>
-    </div>
-
-</div>
+<?php
+include 'nav_bar.php';
+?>
 
 
 </body></html>

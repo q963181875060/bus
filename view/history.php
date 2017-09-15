@@ -39,20 +39,25 @@ var _hmt = _hmt || [];
 
 <ul class="order">
 <?php 
-for($i=0;$i<count($data);$i++){
+foreach($data as $book){
+	if($book['state'] == '正常'){
+		echo '<li class="li_normal">';
+	}else{
+		echo '<li class="li_grey">';
+	}
+	
 	echo '
-		<li class="li_normal">
 			<table>
 				<thead>
 				<tr>
 					<td colspan="3" class="from_to">
-						'.$data[$i]['from_city'].'
+						'.$book['from_city'].'
 						<img src="pic/arrow.png" style="width:35px;vertical-align:middle" alt="">
-						'.$data[$i]['to_city'].'
+						'.$book['to_city'].'
 					</td>
 					<td>
 						<span class="status_name">
-							'.$data[$i]['state'].'
+							'.$book['state'].'
 						</span>
 					</td>
 				</tr>
@@ -62,28 +67,28 @@ for($i=0;$i<count($data);$i++){
 					<tr>
 						<td>订单编号</td>
 						<td>
-							'.$data[$i]['book_id'].'
+							'.$book['book_id'].'
 						</td>
 						<td>验票码</td>
 						<td>
-							'.$data[$i]['verify_code'].'
+							'.$book['verify_code'].'
 						</td>
 					</tr>        <tr>
 					<td>乘车站点</td>
 					<td colspan="3">
-						'.$data[$i]['from_stop'].'
+						'.$book['from_stop'].'
 					</td>
 				</tr>
 				<tr>
 					<td>乘车日期</td>
 					<td colspan="3">
-						'.$data[$i]['start_date'].' '.$data[$i]['from_time'].'
+						'.$book['start_date'].' '.$book['from_time'].'
 					</td>
 				</tr>
 				<tr>
 					<td>领队电话 </td>
 					<td>
-						'.$data[$i]['contact_mobile'].'
+						'.$book['contact_mobile'].'
 					</td>
 					<td></td>
 					<td></td>
@@ -91,15 +96,15 @@ for($i=0;$i<count($data);$i++){
 				<tr>
 						<td>票数</td>
 						<td>
-							'.$data[$i]['ticket_num'].'
+							'.$book['ticket_num'].'
 						</td>
 						<td></td>
 						<td></td>
 				</tr>        
 				<tr>
-					<td>价格</td>
+					<td>单价</td>
 					<td><span class="price" style="font-size:18px">¥
-						'.$data[$i]['price'].'
+						'.$book['price'].'
 					</span></td>
 					<td style="display:none">支付方式</td>
 					<td style="display:none">微信支付
@@ -111,73 +116,20 @@ for($i=0;$i<count($data);$i++){
 					<img src="pic/gantan.png" style="width:20px;vertical-align:middle" alt=""> <span style="color:#ff5500">请您在规定的时间内按时乘车</span></td>
 				</tr>        </tbody>
 			</table>
-
-			<div class="order-buttons">
-				<a href="http://guangyunbus.com/index.php/User/continue_pay/id/1589331">继续支付</a>
-				<a class="cancel_order" href="javascript:cancel_order('.$data[$i]['book_id'].')">取消车票</a>        <div class="clear"></div>
-			</div>
-		</li>
+			';
+	if($book['state'] == '正常'){
+		echo '
+					<div class="order-buttons">
+						<!--<a href="http://guangyunbus.com/index.php/User/continue_pay/id/1589331">继续支付</a>-->
+						<a class="cancel_order" href="javascript:cancel_order('.$book['book_id'].')">取消车票</a></div>        <div class="clear">
+					</div>';
+	}
+			
+	echo '</li>';
 	
-	';
 }
 ?>
 
-
-<li class="li_grey">
-
-    <table>
-        <thead>
-        <tr>
-            <td colspan="3" class="from_to">
-                广州                <img src="pic/arrow.png" style="width:35px;vertical-align:middle" alt="">
-                深圳            </td>
-            <td>
-                <span class="status_name">
-                                            已过期                </span>
-            </td>
-        </tr>
-        </thead>
-
-        <tbody>
-                    <tr>
-                <td>订单编号</td>
-                <td>1485915</td>
-                <td>验票码</td>
-                <td>3936</td>
-            </tr>        <tr>
-            <td>乘车站点</td>
-            <td colspan="3">客村地铁B出口（海珠区）</td>
-        </tr>
-        <tr>
-            <td>乘车日期</td>
-            <td colspan="3">2017-07-30 09:35</td>
-        </tr>
-        <tr>
-            <td>领队电话 </td>
-            <td>13632212647</td>
-            <td></td>
-            <td></td>
-        </tr>
-                            <tr>
-                <td>票数</td>
-                <td>1 张</td>
-                <td></td>
-                <td></td>
-            </tr>        <tr>
-            <td>价格</td>
-            <td><span class="price" style="font-size:18px">¥35.00</span></td>
-            <td>支付方式</td>
-            <td>
-                微信支付                <b class="status1">[已支付]</b>            </td>
-        </tr>
-
-                </tbody>
-    </table>
-
-    <div class="order-buttons">
-                <div class="clear"></div>
-    </div>
-</li>
 </ul>
 <div class="pages">
     <ul></ul></div>
@@ -192,81 +144,29 @@ for($i=0;$i<count($data);$i++){
     <p class="more-buttons" onclick="$(this).parent().hide()">取消</p>
 </div>
 
-<div class="navigation-bar">
-    <div>
-        <a href="http://guangyunbus.com/index.php/Index/index">
-            <p><img src="pic/home.png" alt=""></p>
-            <p>首页</p>
-        </a>
-    </div>
-
-	<!--<div>
-        <a href="/index.php/User/share">
-            <p><img src="/Public/app/images/share.png" alt="" /></p>
-            <p>分享</p>
-        </a>
-    </div>-->
-
-
-	
-   <!-- <div>
-        <a href="/index.php/Page/show/id/1">
-            <p><img src="/Public/app/images/about.png" alt="" /></p>
-            <p>关于</p>
-        </a>
-    </div>
-
-    <div>
-        <a href="/index.php/Page/show/id/2">
-            <p><img src="/Public/app/images/contact.png" alt="" /></p>
-            <p>联系</p>
-        </a>
-    </div>-->
-
-    <div>
-        <a href="http://guangyunbus.com/index.php/User/orders">
-            <p><img src="pic/order_h.png" alt=""></p>
-            <p>订单</p>
-        </a>
-    </div>
-
-    <div>
-        <a href="http://guangyunbus.com/index.php/Page/show/id/3">
-            <p><img src="pic/icon05.png" alt=""></p>
-            <p>指南</p>
-        </a>
-    </div>
-    
-    <div>
-        <a href="http://guangyunbus.com/index.php/User/index">
-            <p><img src="pic/member.png" alt=""></p>
-            <p>我的</p>
-        </a>
-    </div>
-
-</div>
-
-
+<?php
+include 'nav_bar.php';
+?>
 
 
 <script>
 
-	var tmp_req_url = 'http://139.199.105.54/bus/controller/clientController.php';
+	var tmp_req_url = 'clientController.php';
 	var AJAX_TIMEOUT = 2000;
-    var order_id = 0;
+    var book_id = 0;
     function cancel_order(id) {
-        order_id = id;
+        book_id = id;
         $('#notice-box').show();
     }
 
     function cancel_order_do(){
-        if( !(order_id > 0) ) {
+        if( !(book_id > 0) ) {
             alert('参数错误');
             return false;
         }
         var post_data = {};	
 		post_data['action'] = 'cancel_book';
-		post_data['book_id'] = order_id;
+		post_data['book_id'] = book_id;
 		
 		$.ajax({
             type        : 'post',
@@ -275,7 +175,12 @@ for($i=0;$i<count($data);$i++){
             data        : { 'request'   : JSON.stringify(post_data) },
             dataType    : 'json',
             success     : function(data) {
-                window.location.href=data['url'];
+				if(data['suc'] == 1){
+					window.location.href=data['url'];
+				}else{
+					alert(data['msg']);
+				}
+                
             }
         })
     }
