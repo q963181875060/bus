@@ -7,22 +7,72 @@
     <script src="js/hm.js"></script><script type="text/javascript" src="js/jquery-2.js"></script>
     <script type="text/javascript" src="js/jquery-form.js"></script>
     <script type="text/javascript" src="js/func.js"></script>
+	<script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
     <link href="./css/style.css" rel="stylesheet" type="text/css">
     <!--swiper-->
     <link href="./css/swiper.css" rel="stylesheet" type="text/css">
+	<?php
+		include "logicController.php";
+		$jssdk = new JSSDK($appid, $secret);
+		$signPackage = $jssdk->GetSignPackage();
+	?>
     <script>
-        var SITE_URL = "http://guangyunbus.com/";
-        var img_upload_url = 'http://guangyunbus.com/res/upload_file.php';
-    </script>
-
-    <script>
-        var _hmt = _hmt || [];
-        (function() {
-            var hm = document.createElement("script");
-            hm.src = "//hm.baidu.com/hm.js?7aa758070a07098e84e9dbec440b7866";
-            var s = document.getElementsByTagName("script")[0];
-            s.parentNode.insertBefore(hm, s);
-        })();
+		var tmp_req_url = 'clientController.php';
+		var AJAX_TIMEOUT = 2000;
+	
+		var apiList = [
+			  // 所有要调用的 API 都要加到这个列表中
+			  'getLocation',
+			  'onMenuShareTimeline',
+			  'chooseWXPay'
+			];
+		var apiCheckList;
+         wx.config({
+			debug: false,
+			appId: '<?php echo $signPackage["appId"];?>',
+			timestamp: <?php echo $signPackage["timestamp"];?>,
+			nonceStr: '<?php echo $signPackage["nonceStr"];?>',
+			signature: '<?php echo $signPackage["signature"];?>',
+			jsApiList: apiList
+		  });
+		  wx.ready(function () {
+			 wx.checkJsApi({
+				jsApiList: apiList, // 需要检测的JS接口列表，所有JS接口列表见附录2,
+				success: function(res) {
+					// 以键值对的形式返回，可用的api值true，不可用为false
+					// 如：{"checkResult":{"chooseImage":true},"errMsg":"checkJsApi:ok"}
+					apiCheckList = res['checkResult'];
+					if(apiCheckList['getLocation']){
+						wx.getLocation({
+							type: 'gcj02', // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
+							success: function (res) {
+								//上传位置到服务器
+								var post_data = {};
+								post_data['action'] = 'upload_position';
+								post_data['latitude'] = res.latitude; // 纬度，浮点数，范围为90 ~ -90
+								post_data['longitude'] = res.longitude; // 纬度，浮点数，范围为90 ~ -90
+								
+								var ajax_request = $.ajax({
+									type        : 'post',
+									url         : tmp_req_url,
+									timeout     : AJAX_TIMEOUT, 
+									async		: true,
+									data       : { 'request'   : JSON.stringify(post_data) },
+									dataType    : 'json',
+									success     : function(data) {
+										if(data['suc'] != 1){
+											alert(data['msg']);
+										}else{
+											//alert(data['msg']);
+										}
+									}
+								})
+							}
+						});
+					}
+				}
+			});
+		  });
     </script>
 </head>
 <body style="padding-top: 0">
@@ -180,37 +230,6 @@
 
 
 <script type="text/javascript">
-	/*$(document).ready(function(){
-        getData();
-    });*/
-    var latitude = '';
-    var longitude = '';
-	var tmp_req_url = 'clientController.php';
-	var AJAX_TIMEOUT = 2000;
-	/*var from_city = '';
-	var city_direction = -1;
-	var to_city = '';
-	
-	function getData(){
-		var post_data = {};
-		post_data['action'] = 'index_get_data';
-        $.ajax({
-            type        : 'post',
-            url         : tmp_req_url,
-            data        : { 'request'   : JSON.stringify(post_data) },
-            dataType    : 'json',
-            success     : function(data) {
-				
-				from_city = data['from_city'];
-				to_city = data['to_city']
-				
-				alert("suc:"+data['from_city']+"  "+data['to_city']);
-								
-				$('#from_city').html(from_city);
-				$('#to_city').html(to_city);
-            }
-        })
-	}*/
 	
 	function goto_select_city(city_direction){
 		if(city_direction == 1 && $('#from_city').html() == '' || $('#from_city').html() == '请选择'){
@@ -280,24 +299,6 @@
 				alert("err:"+err);
 			}
 		})
-    }
-
-	
-    function locationSuccess(position) {
-        var coords = position.coords;
-
-        latitude = coords.latitude; //纬度
-
-        longitude = coords.longitude; //经度
-    }
-
-    function getLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(locationSuccess, locationError, {
-                enableHighAcuracy: true,
-                maximumAge: 3000
-            });
-        }
     }
 
     function changeLocation() {

@@ -36,10 +36,6 @@ var _hmt = _hmt || [];
     <div class="header-title">车票预订</div>
 </div>
 
-<?php
-	include 'logicController.php';
-	//$data = get_book_data();
-?>
 
 <form id="form1" method="post" action="/index.php/Index/do_post">
     <ul class="ticker-order">
@@ -91,12 +87,11 @@ var _hmt = _hmt || [];
 					echo $_SESSION['price'];
 				?>
 				</b>
-				<div id="single_price" style="display:none;">
+				<div id="price" style="display:none;">
 				<?php
 					echo $_SESSION['price'];
 				?>
 				</div>
-                <span style="display:none">（儿童 <b class="price">¥17.5</b> 元）</span>
             </li>
             <li>
                 <span>票数：</span>
@@ -104,50 +99,46 @@ var _hmt = _hmt || [];
                 <input name="num" id="num" readonly="readonly" style="outline:none;border:1px solid #ccc;border-radius: 3px;background:#fff;height:32px;text-align:center;font-size:18px;vertical-align:middle" value="0" size="3" type="text">
                 <img src="pic/image_btn_add.png" alt="" style="width:28px" onclick="plus()">
             </li>
-            <li style="display:none">
-                <span>儿童票数：</span>
-                <img src="pic/image_btn_add_press.png" alt="" style="width:28px" onclick="child_minus()">
-                <input name="child_num" id="child_num" readonly="readonly" style="outline:none;border:1px solid #ccc;border-radius: 3px;background:#fff;height:32px;text-align:center;font-size:18px;vertical-align:middle" value="0" size="3" type="text">
-                <img src="pic/image_btn_add.png" alt="" style="width:28px" onclick="child_plus()">
-                <p style="color:#0ea9e2;font-size:12px;float:right" onclick="$('#child-tip').show()">
-                    <img src="pic/children_question.png" alt="" style="width:16px;vertical-align:middle"> 儿童票购买标准
-                </p>
-            </li>
-            <li style="display:none">
-                <span>交通部规定：儿童或婴儿乘车必须占座位，否则视为超载。请携带儿童或婴儿的乘客自觉购买儿童票留位。</span>
-            </li>
-                    </ul>
+          
+	</ul>
 
     <ul class="ticker-order">
 
 
-        <li>
+        <!--<li>
             <p style="margin-bottom:10px"><span>支付方式：</span></p>
-
             <table>
                 <tbody>
-					<tr onclick="select_payment(0,35)" style="display:none">
-                        <td style="padding:10px 0">
-                            <img src="pic/image_pay.png" alt="" style="width:30px">
-                            上车支付
-                        </td>
-                        <td class="text-right"><input name="payment_id_radio" id="payment_id_0" type="radio"></td>
-                    </tr>
-                    <tr onclick="select_payment(1,35)">
+                    <tr>
                         <td style="padding:10px 0">
                             <img src="pic/image_weixinpay.png" alt="" style="width:30px">
                             微信支付
                         </td>
                         <td class="text-right"><input name="payment_id_radio" id="payment_id_1" checked="checked" type="radio"></td>
                     </tr>
-                             </tbody></table>
+                 </tbody>
+			</table>
+        </li>-->
+		<li>
+            <p style="margin-bottom:10px"><span>使用代金券：</span></p>
+            <table>
+                <tbody>
+				<?php
+				include 'logicController.php';
+				$coupons = get_book_coupon_data();
+				foreach($coupons as $coupon){
+					echo '<tr>
+                        <td class="price" style="padding:10px 0;font-weight:300">
+                            ¥ '.$coupon['coupon_price'].' 代金券
+                        </td>
+                        <td class="text-right"><input name="coupon_ratio" onclick="select_coupon(\''.$coupon['user_coupon_id'].':'.$coupon['coupon_price'].'\')" id="user_coupon_'.$coupon['user_coupon_id'].'" type="radio"></td>
+                    </tr>';
+				}
+				
+				?>
+                 </tbody>
+			</table>
         </li>
-        <input name="payment_id" id="payment_id" value="1" type="hidden">
-
-                    <input name="coupon_sel" id="coupon_sel" value="0:0" type="hidden">        <input name="coupon_id" id="coupon_id" value="0" type="hidden">
-        <input name="coupon_price" id="coupon_price" value="0" type="hidden">
-
-
         <li style="display:none">
             <p><span>预订人信息：</span></p>
             <p>
@@ -161,21 +152,14 @@ var _hmt = _hmt || [];
             </p>
         </li>
         <li id="total_price_div" style="">
-                <table>
-                    <tbody><tr>
-                        <td><span>总价：</span></td>
-                        <td class="text-right price" style="font-size:22px" id="price">¥0</td>
-						<div style="display:none;" id="total_price"></div>
-                    </tr>
-                </tbody></table>
-            </li>    </ul>
-
-    <input name="line_id" value="4213" type="hidden">
-    <input name="yuding_date" value="2017-09-07" type="hidden">
-    <input name="yuding_time" value="13:10" type="hidden">
-    <input name="from_zhan" value="2" type="hidden">
-    <input name="to_zhan" value="18" type="hidden">
-    <input name="price_type" id="price_type" value="1" type="hidden">
+			<table>
+				<tbody><tr>
+					<td><span>总价：</span></td>
+					<td class="text-right price" style="font-size:22px" id="total_price">¥0</td>
+				</tr>
+			</tbody></table>
+		</li>    
+	</ul>
 </form>
 
 <div class="navigation-footer" style="border-top: 1px solid #ddd;background: #eee;position: fixed;bottom: 0;left: 0;width: 100%;padding-top: 5px;padding-bottom: 5px;">
@@ -212,21 +196,16 @@ var _hmt = _hmt || [];
 
 	var tmp_req_url = 'clientController.php';
 	var AJAX_TIMEOUT = 2000;
-
-    //使用优惠券
-    var use_coupon = false;
-
-    //票价
-    var price = 0;
-
-    //儿童票折扣
-    var child_discount = 0.5;
-
-    //最大优惠价格
-    var max_coupon_price = 0;
-
+	
+	var user_coupon_id = -1;
+	var coupon_price = 0;
+	var total_price = 0;
+	var price = 0;
+	var num = 0;
+	
+	plus();
+	
 	function buy_ticket(){
-		var num = $.trim($('input[name="num"]').val());
 		if(num == 0){
 			alert("请购买至少一张车票");
 			return;
@@ -239,7 +218,11 @@ var _hmt = _hmt || [];
 		var post_data = {};	
 		post_data['action'] = 'book_ticket';
 		post_data['ticket_num'] = num;
-		
+		if(user_coupon_id != -1){
+			post_data['user_coupon_id'] = user_coupon_id;
+		}
+		post_data['total_price'] = total_price;
+		//alert(user_coupon_id);
 		$.ajax({
             type        : 'post',
             url         : tmp_req_url,
@@ -258,59 +241,30 @@ var _hmt = _hmt || [];
 	}
 	
     function calTotal() {
-        var coupon_price = $('#coupon_price').val();
-        var num = $.trim($('input[name="num"]').val());
-        var child_num = $.trim($('input[name="child_num"]').val());
-
-        var total = (price * num) + (price * child_discount * child_num) - coupon_price;
-		//alert(total);
-        $('#price').html('&yen;' + total);
-		$('#total_price').html(total);
-    }
-
-    function select_payment(payment_id, jiage) {
-        var coupon_box = document.getElementById('coupon_box');
-        if( payment_id == 1 && coupon_box != null ) {
-            coupon_box.style.display = 'block';
-            //显示微信支付按钮
-            $('#submit_wx').show();
-            $('#submit_che').hide();
-        } else if( payment_id == 0 ) {
-            if( coupon_box != null ) {
-                coupon_box.style.display = 'none';
-            }
-            $('#submit_wx').hide();
-            $('#submit_che').show();
-            $('#coupon_sel').val('0:0');
-            select_coupon('0:0');
-        }
-        $('#payment_id').val(payment_id);
-        document.getElementById('payment_id_' + payment_id).checked = true;
-        price = jiage;
-        $('#total_price_div').show();
-        calTotal();
+		price = parseFloat($.trim($('#price').html()));
+        total_price = (price * num) - coupon_price;
+		if(total_price < 0){
+			total_price = 0;
+		}
+		
+        $('#total_price').html('&yen;' + total_price);
     }
 
     function select_coupon(val) {
         var a = val.split(':');
-        $('#coupon_id').val(a[0]);
-        if( max_coupon_price > 0 ) {
-            var coupon_price = a[1] > max_coupon_price ? max_coupon_price : a[1];
-        } else {
-            var coupon_price = a[1];
-        }
-        $('#coupon_price').val(coupon_price);
+        user_coupon_id = parseInt(a[0]);
+        coupon_price = parseFloat(a[1]);
         calTotal();
     }
 
     function minus() {
-        var num = $.trim($('input[name="num"]').val());
+        num = $.trim($('input[name="num"]').val());
 
         if (num == '') {
-            num = 0;
+            num = 1;
         }
 
-        if (num > 0) {
+        if (num > 1) {
             num = parseInt(num) - 1;
         }
 
@@ -320,8 +274,8 @@ var _hmt = _hmt || [];
     }
 
     function plus() {
-        var num = $.trim($('input[name="num"]').val());
-
+        num = $.trim($('input[name="num"]').val());
+		
         if (num == '') {
             num = 0;
         }
@@ -335,122 +289,7 @@ var _hmt = _hmt || [];
 
         calTotal();
     }
-
-    function child_minus() {
-        var num = $.trim($('input[name="child_num"]').val());
-
-        if (num == '') {
-            num = 0;
-        }
-
-        if (num > 0) {
-            num = parseInt(num) - 1;
-        }
-
-        $('input[name="child_num"]').val(num);
-
-        calTotal();
-    }
-
-    function child_plus() {
-        var max_yuding = parseInt("3");
-        var num = $.trim($('input[name="child_num"]').val());
-
-        if (num == '') {
-            num = 0;
-        }
-
-        if( num == max_yuding ) {
-            alert('车票数量超出可预订数量');
-            return false;
-        }
-
-        num = parseInt(num) + 1;
-
-        $('input[name="child_num"]').val(num);
-
-        calTotal();
-    }
-
-</script>
-<style>
-    .a_link{
-        color: #eb7c1a;
-        font-weight: bold;
-        text-decoration: underline;
-        padding-left: 10px;
-    }
-</style>
-<script>
-    //是否分享到朋友圈
-    var has_share = false;
-    var price_type = "1";
-    $(function(){
-		plus();
-		
-        var is_lock = false;
-        $('.submit').click(function(){
-            //特价必须要分享到朋友圈才能提交
-            var this_type = $(this).attr('data-type');
-            if( price_type != '1' && has_share === false && this_type != 1 ) {
-                /*var html = '<div id="mcover" onclick="close_share_tip()"><img src="/Public/home/images/guide1.png" /></div>';
-                $('body').append(html);*/
-
-                $('#tj_tip_text').html('<img src="/Public/home/images/pyq.png" width="30" style="float: left" />点击右上角分享到朋友圈，享受特价购票乘车！</a>');
-                $('#tj_tip').show();
-
-                return false;
-            }
-
-            $('#price_type').val(this_type);
-
-           /* var t = confirm("您确定要预订车票吗？");
-            if( t == false ) {
-                return false;
-            }*/
-
-            if( is_lock == false ) {
-                is_lock = true;
-                if( $('#username').val() == '' ) {
-                    is_lock = false;
-                    alerts('姓名不能为空！');
-                    return false;
-                }
-                var phone = $('#phone').val();
-                if( phone == '' ) {
-                    is_lock = false;
-                    alerts('手机号码不能为空！');
-                    return false;
-                }
-                if( $('#sns_code').val() == '' ) {
-                    is_lock = false;
-                    alerts('请输入验证码！');
-                    return false;
-                }
-                var re = /^1\d{10}$/;
-                if(re.test(phone) === false){
-                    is_lock = false;
-                    alerts('手机号码不合法！');
-                    return false;
-                }
-                var payment_id = $('#payment_id').val();
-
-                if( payment_id == '' ) {
-                    is_lock = false;
-                    alerts('请选择一种支付方式！');
-                    return false;
-                }
-                lock();
-                $('#form1').submit();
-            }
-        })
-    })
 </script>
 
-
-<script>
-    //默认微信支付
-    select_payment(1,parseFloat($('#single_price').html()).toFixed(1));
-</script>
 
 </body></html>

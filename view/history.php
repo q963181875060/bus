@@ -103,14 +103,24 @@ foreach($data as $book){
 				</tr>        
 				<tr>
 					<td>单价</td>
-					<td><span class="price" style="font-size:18px">¥
-						'.$book['price'].'
-					</span></td>
-					<td style="display:none">支付方式</td>
-					<td style="display:none">微信支付
-						<b class="status0">[未支付]</b>
-					</td>
-				</tr>
+					<td>
+						<span class="price" style="font-size:18px">¥
+							'.$book['price'].'
+						</span>
+					</td>';
+		if($book['coupon_price'] != '' && $book['coupon_price'] != 0){
+			echo '<td>使用代金券</td>
+					<td>
+						<span class="price" style="font-size:18px">¥
+							'.$book['coupon_price'].'
+						</span>
+					</td>';
+		}else{
+			echo '<td></td>
+				  <td></td>';
+		}
+					
+		echo	'</tr>
 
 				<tr><td colspan="4">
 					<img src="pic/gantan.png" style="width:20px;vertical-align:middle" alt=""> <span style="color:#ff5500">请您在规定的时间内按时乘车</span></td>

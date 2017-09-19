@@ -1,7 +1,25 @@
 <?php
-$DBSTR = 'mysql:host=localhost;port=3306;dbname=bus';
-$user='root';      //数据库连接用户名
-$pass='920208';          //对应的密码
+require_once('common.php');
+require_once('jssdk.php');
+
+//判断openid是否存在
+date_default_timezone_set('Asia/Shanghai');	
+if(!isset($_SESSION['user_id'])){
+	if(isset($_GET['code'])){
+		$code = $_GET['code'];
+		$url='https://api.weixin.qq.com/sns/oauth2/access_token?appid='.$appid.'&secret='.$secret.'&code='.$code.'&grant_type=authorization_code';
+		$html = file_get_contents($url);
+		$req = json_decode($html,1);
+		//print_r($req);
+		if(isset($req['openid'])){
+			//error_log("save openid suc!");
+			$_SESSION['user_id']=trim($req['openid']);
+		}else{
+			//echo "微信登录失败";
+		}
+	}
+}
+
 
 //返回选择的城市列表
 function get_select_city_data(){
@@ -148,7 +166,7 @@ function get_history_data(){
 					where user_id=:user_id and state='正常' and 
 					str_to_date(start_date,'%Y-%m-%d') <= str_to_date(:start_date,'%Y-%m-%d') and 
 					time_to_sec(from_time) <= time_to_sec(:from_time)";
-		$exe_params[':user_id']=1;
+		$exe_params[':user_id']=$_SESSION['user_id'];
 		$exe_params[':start_date']=date('Y-m-d');
 		$exe_params[':from_time']=date('H:i');
 		
@@ -157,9 +175,9 @@ function get_history_data(){
 		
 		
 		$exe_params = array();
-		$sql = "select book_id, verify_code, from_city, to_city, from_stop, to_stop, start_date, from_time, contact_mobile, ticket_num, price, state, buy_time
+		$sql = "select book_id, verify_code, from_city, to_city, from_stop, to_stop, start_date, from_time, contact_mobile, ticket_num, price, state, buy_time, coupon_price
 				from book_table where user_id=:user_id order by book_id desc";
-		$exe_params[':user_id']=1;
+		$exe_params[':user_id']=$_SESSION['user_id'];
 		
 		$sth = $dbh->prepare($sql);
 		$sth->execute($exe_params);
@@ -176,5 +194,59 @@ function get_history_data(){
 	//			'start_date'=>'2017-09-08','from_time'=>'14:00','contact_mobile'=>'13345676543','ticket_num'=>'2','price'=>'30', 'state'=>'已过期'));
 }
 
+function get_coupon_data(){
+	
+	try {
+		
+		date_default_timezone_set('Asia/Shanghai');
+		global $DBSTR, $user, $pass;
+		$dbh = new PDO ($DBSTR,$user,$pass); 
+		
+		$exe_params = array();
+		$sql = "select user_coupon_id, state, get_time, use_time, start_time, end_time, coupon_price, route_ids from user_coupon_table, coupon_table where 
+				user_coupon_table.coupon_id = coupon_table.coupon_id and 
+				user_id=:user_id order by user_coupon_id desc";
+		$exe_params[':user_id']=$_SESSION['user_id'];
+		
+		$sth = $dbh->prepare($sql);
+		$sth->execute($exe_params);
+		
+		$result = $sth->fetchAll(PDO::FETCH_ASSOC);
+		$dbh = null;
+		
+	} catch (Exception $e) {
+		error_log($e->getMessage());
+	}
+	return $result;
+	
+	//return array(array('book_id'=>'12434543','verify_code'=>'1234','from_city'=>'青岛','to_city'=>'广州','from_stop'=>'中山路','to_stop'=>'客村',
+	//			'start_date'=>'2017-09-08','from_time'=>'14:00','contact_mobile'=>'13345676543','ticket_num'=>'2','price'=>'30', 'state'=>'已过期'));
+}
+
+//得到用户在此班次下可用的coupon
+function get_book_coupon_data(){
+	try {
+		
+		date_default_timezone_set('Asia/Shanghai');
+		global $DBSTR, $user, $pass;
+		$dbh = new PDO ($DBSTR,$user,$pass); 
+		
+		$exe_params = array();
+		$sql = "select user_coupon_id, coupon_price from user_coupon_table, coupon_table where 
+				user_coupon_table.coupon_id=coupon_table.coupon_id and user_id=:user_id and user_coupon_table.state='正常' and (route_ids like '%全部%' or route_ids like :route_id)";
+		$exe_params[':user_id']=$_SESSION['user_id'];
+		$exe_params[':route_id']='%>'.trim($_SESSION['route_id']).'>%';
+		
+		$sth = $dbh->prepare($sql);
+		$sth->execute($exe_params);
+		
+		$result = $sth->fetchAll(PDO::FETCH_ASSOC);
+		$dbh = null;
+		
+	} catch (Exception $e) {
+		error_log($e->getMessage());
+	}
+	return $result;
+}
 
 ?>

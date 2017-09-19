@@ -1,5 +1,5 @@
 <div class="navigation-bar">
-    <div style="width: 50%;">
+    <div style="width: 33%;">
         <a href="index.php">
             <p><img src="pic/home.png" alt=""></p>
             <p>首页</p>
@@ -29,10 +29,17 @@
         </a>
     </div>-->
 
-    <div style="width: 50%;">
+    <div style="width: 33%;">
         <a href="history.php">
             <p><img src="pic/order.png" alt=""></p>
             <p>订单</p>
+        </a>
+    </div>
+	
+	<div style="width: 33%;">
+        <a href="coupon.php">
+            <p><img src="pic/icon05.png" alt=""></p>
+            <p>代金券</p>
         </a>
     </div>
 
