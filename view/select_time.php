@@ -1,29 +1,25 @@
 <!DOCTYPE html>
-<html><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
-    <title>选择时间点</title>
+    <title>合力巴士</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
-    <script src="js/hm.js"></script><script type="text/javascript" src="js/jquery-2.js"></script>
-    <script type="text/javascript" src="js/jquery-form.js"></script>
-    <script type="text/javascript" src="js/func.js"></script>
-    <link href="css/style.css" type="text/css" rel="stylesheet">
-    <!--swiper-->
-    <link href="css/swiper.css" rel="stylesheet" type="text/css">
-    <script>
-        var SITE_URL = "http://guangyunbus.com/";
-        var img_upload_url = 'http://guangyunbus.com/res/upload_file.php';
-    </script>
-
+	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jquery-2.js"></script>
+    <script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jquery-form.js"></script>
+    <script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/func.js"></script>
+	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jweixin-1.0.0.js"></script>
+    <link href="http://bus-1251514843.cosbj.myqcloud.com/css/style.css" rel="stylesheet" type="text/css">
+	<?php
+		include "logicController.php";
+	?>
 	<script>
-		var _hmt = _hmt || [];
-		(function() {
-		  var hm = document.createElement("script");
-		  hm.src = "//hm.baidu.com/hm.js?7aa758070a07098e84e9dbec440b7866";
-		  var s = document.getElementsByTagName("script")[0]; 
-		  s.parentNode.insertBefore(hm, s);
-		})();
+		var SERVER_URL = 'clientController.php';
+		var AJAX_TIMEOUT = 2000;
+		
+	
 	</script>
+	
 </head>
 <body>
 <div id="lock" style="display: none">
@@ -35,6 +31,8 @@
     <div class="header-title">选择班次</div>
 </div>
 
+
+
 <div class="schedule-select-block">
     
 <?php
@@ -45,7 +43,7 @@
 		</div>';
 ?>
     
-    <img src="pic/image_sequence.png" alt="" style="width:14px;vertical-align:middle"> 		
+    <img src="http://bus-1251514843.cosbj.myqcloud.com/bus/image_sequence.png" alt="" style="width:14px;vertical-align:middle"> 		
 <?php
 	$weekarray=array("日","一","二","三","四","五","六");
 	$dayinweeek = ' (星期'.$weekarray[date('w',strtotime($_SESSION['lookup_date']))].')';
@@ -62,51 +60,70 @@
 <ul class="schedule-list">
 
 <?php
-include 'logicController.php';
 $routes = get_select_time_data();
 if(count($routes) == 0){
 	echo '无班次安排，请选择其他日期';
 }
+?>
+
+
+	
+					
+					
+<?php
 foreach($routes as $route_id=>$route){
-	echo '
-    <li>
-        <table>
+	echo '<li>
+			<table>
 			<tbody>
-				<tr>
-                    <td style="width:10%;padding: 0 7px" class="text-center"><img src="pic/clock.png" alt=""></td><td>
+    		<tr onclick="select_time('.$route_id.','.$route['available_num'].')">
+                    <td style="width:10%;padding: 0 7px" class="text-center"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/clock.png" alt=""></td><td>
                     </td>
                     <td id="from_time_'.$route_id.'">'.$route['from_time'].'</td>
                     <td rowspan="3" class="text-right">
-						<p>
-							<a onclick="select_time(1,'.$route_id.','.$route['special_price'].','.$route['available_special_num'].')" class="special_order">
-                                    特价¥'.$route['special_price'].'(剩'.$route['available_special_num'].'张)
-							</a> 
-							<br><br>
-							
-							<a onclick="select_time(0,'.$route_id.','.$route['price'].','.$route['available_num'].')" class="normal_order">
-                                    ¥'.$route['price'].' (剩'.$route['available_num'].'张)
-							</a> 
+						<p>';
+	if($route['special_ticket_num'] > 0){
+						echo '<a class="special_order">
+								特价¥'.$route['special_price'];
+						if($route['available_special_num'] <= 10){
+							echo '(剩'.$route['available_special_num'].'张)';
+						}
+						
+						echo	'</a>
+							<br><br>';
+
+	}
+		
+	echo '			
+							<a class="normal_order">
+                                    正价¥'.$route['price'];
+	if($route['available_num'] <= 10){
+							echo '(剩'.$route['available_num'].'张)';
+	}
+	echo '					</a> 
                         </p>
                     </td>
                 </tr>
                 <tr>
-                    <td class="text-center" style="width:10%"><img src="pic/start.png" alt=""></td><td>
+                    <td class="text-center" style="width:10%"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/start.png" alt=""></td><td>
                     </td><td>'.$_SESSION['from_stop'].'</td>
                 </tr>
                 <tr>
-                    <td class="text-center" style="width:10%"><img src="pic/end.png" alt=""></td><td>
+                    <td class="text-center" style="width:10%"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/end.png" alt=""></td><td>
                     </td><td>'.$_SESSION['to_stop'].'</td>
                 </tr>
-            </tbody>
+			 </tbody>
 		</table>
     </li>';
 }
+	
 ?>
+
+           
+
 </ul>
 
 <script type="text/javascript">
-	var tmp_req_url = 'clientController.php';
-	var AJAX_TIMEOUT = 2000;
+
 	
 	function select_another_day(lookup_date){
 		var pre_time = new Date(new Date(lookup_date).setHours(0, 0, 0, 0)).getTime();
@@ -122,7 +139,7 @@ foreach($routes as $route_id=>$route){
 		
 		$.ajax({
             type        : 'post',
-            url         : tmp_req_url,
+            url         : SERVER_URL,
 			async		: false,
             data        : { 'request'   : JSON.stringify(post_data) },
             dataType    : 'json',
@@ -132,7 +149,7 @@ foreach($routes as $route_id=>$route){
         })
 	}
 	
-	function select_time(type, route_id, price, available_num){
+	function select_time(route_id, available_num){
 		if(available_num <= 0){
 			alert("无余票，请选择其他车次");
 			return;
@@ -143,12 +160,10 @@ foreach($routes as $route_id=>$route){
 		post_data['route_id'] = route_id;
 		post_data['from_time'] = $.trim($('#from_time_'+route_id).html());
 		post_data['start_date'] = $.trim($('#lookup_date').html());
-		post_data['is_special_ticket'] = type;
-		post_data['price'] = price;
 		
 		$.ajax({
             type        : 'post',
-            url         : tmp_req_url,
+            url         : SERVER_URL,
 			async		: false,
             data        : { 'request'   : JSON.stringify(post_data) },
             dataType    : 'json',

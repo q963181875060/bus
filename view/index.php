@@ -1,25 +1,38 @@
 <!DOCTYPE html>
-<html><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
-    <title>巴士</title>
+    <title>合力巴士</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
-    <script src="js/hm.js"></script><script type="text/javascript" src="js/jquery-2.js"></script>
-    <script type="text/javascript" src="js/jquery-form.js"></script>
-    <script type="text/javascript" src="js/func.js"></script>
-	<script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
-    <link href="./css/style.css" rel="stylesheet" type="text/css">
-    <!--swiper-->
-    <link href="./css/swiper.css" rel="stylesheet" type="text/css">
+	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jquery-2.js"></script>
+    <script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jquery-form.js"></script>
+    <script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/func.js"></script>
+	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jweixin-1.0.0.js"></script>
+    <link href="http://bus-1251514843.cosbj.myqcloud.com/css/style.css" rel="stylesheet" type="text/css">
+	
+	<!--<script type="text/javascript">
+		// 对浏览器的UserAgent进行正则匹配，不含有微信独有标识的则为其他浏览器
+		var useragent = navigator.userAgent;
+		if (useragent.match(/MicroMessenger/i) != 'MicroMessenger') {
+			// 这里警告框会阻塞当前页面继续加载
+			alert('已禁止本次访问：您必须使用微信内置浏览器访问本页面！');
+			// 以下代码是用javascript强行关闭当前页面
+			var opened = window.open('about:blank', '_self');
+			opened.opener = null;
+			opened.close();
+		}
+	</script>-->
+	
 	<?php
 		include "logicController.php";
 		$jssdk = new JSSDK($appid, $secret);
 		$signPackage = $jssdk->GetSignPackage();
 	?>
     <script>
-		var tmp_req_url = 'clientController.php';
+		var SERVER_URL = 'clientController.php';
 		var AJAX_TIMEOUT = 2000;
-	
+
 		var apiList = [
 			  // 所有要调用的 API 都要加到这个列表中
 			  'getLocation',
@@ -27,20 +40,21 @@
 			  'chooseWXPay'
 			];
 		var apiCheckList;
-         wx.config({
+        wx.config({
 			debug: false,
 			appId: '<?php echo $signPackage["appId"];?>',
 			timestamp: <?php echo $signPackage["timestamp"];?>,
 			nonceStr: '<?php echo $signPackage["nonceStr"];?>',
 			signature: '<?php echo $signPackage["signature"];?>',
 			jsApiList: apiList
-		  });
-		  wx.ready(function () {
+		 });
+		 wx.ready(function () {
 			 wx.checkJsApi({
 				jsApiList: apiList, // 需要检测的JS接口列表，所有JS接口列表见附录2,
 				success: function(res) {
 					// 以键值对的形式返回，可用的api值true，不可用为false
 					// 如：{"checkResult":{"chooseImage":true},"errMsg":"checkJsApi:ok"}
+					/*
 					apiCheckList = res['checkResult'];
 					if(apiCheckList['getLocation']){
 						wx.getLocation({
@@ -54,7 +68,7 @@
 								
 								var ajax_request = $.ajax({
 									type        : 'post',
-									url         : tmp_req_url,
+									url         : SERVER_URL,
 									timeout     : AJAX_TIMEOUT, 
 									async		: true,
 									data       : { 'request'   : JSON.stringify(post_data) },
@@ -69,7 +83,7 @@
 								})
 							}
 						});
-					}
+					}*/
 				}
 			});
 		  });
@@ -80,35 +94,13 @@
     <div id="shadow_loading"></div><div id="shadow_bg"></div>
 </div>
 
-<!--<div class="header"></div>-->
-
-<div class="swiper-container swiper-container-horizontal">
-    <div class="swiper-wrapper" style="transition-duration: 0ms; transform: translate3d(-1366px, 0px, 0px);">
-        <div class="swiper-slide swiper-slide-prev" style="width: 1366px;">
-                <a href="###"><img src="pic/59352bc4ac1a1.jpg" alt=""></a>
-            </div><div class="swiper-slide swiper-slide-active" style="width: 1366px;">
-                <a href="###"><img src="pic/592bea665036a.gif" alt=""></a>
-            </div>    </div>
-
-    <div class="swiper-pagination swiper-pagination-clickable"><span class="swiper-pagination-bullet"></span><span class="swiper-pagination-bullet swiper-pagination-bullet-active"></span></div>
-</div>
-
-<script type="text/javascript" src="js/swiper.js"></script>
-<script type="text/javascript">
-    var swiper = new Swiper('.swiper-container', {
-        pagination: '.swiper-pagination',
-        paginationClickable: true,
-        autoplay: 5000,
-        speed: 800
-    });
-</script>
-
+<div><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/index_banner2.gif" alt=""></div>
 <div class="container">
 
     <div class="location-picker">
         <table>
             <tbody><tr>
-                <td class="text-center" style="width:8%"><img src="pic/from_location.png" alt=""></td>
+                <td class="text-center" style="width:8%"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/from_location.png" alt=""></td>
                 <td onclick="goto_select_city(0)" style="padding-left:5px">
                     <b class="arrow">&gt;</b>
 
@@ -126,11 +118,11 @@
                 </td>
 
                 <td rowspan="2" class="text-center" style="width:16%;padding: 0 10px" onclick="changeLocation()">
-                    <img src="pic/location_change.png" alt="">
+                    <img src="http://bus-1251514843.cosbj.myqcloud.com/bus/location_change.png" alt="">
                 </td>
             </tr>
             <tr>
-                <td class="text-center"><img src="pic/to_location.png" alt=""></td>
+                <td class="text-center"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/to_location.png" alt=""></td>
                 <td onclick="goto_select_city(1)" style="padding-left:5px">
                     <b class="arrow">&gt;</b>
 
@@ -149,7 +141,7 @@
             </tr>
 
             <tr>
-                <td class="text-center" style="padding: 0 5px"><img src="pic/date_picker.png" alt=""></td>
+                <td class="text-center" style="padding: 0 5px"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/date_picker.png" alt=""></td>
                 <td colspan="2">
                     <b class="arrow">&gt;</b>
 
@@ -181,7 +173,7 @@
     <div class="notice" style="display:none">
         <table>
             <tbody><tr>
-                <td style="width:30px"><img src="pic/Notice.png" alt=""></td>
+                <td style="width:30px"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/Notice.png" alt=""></td>
                 <td style="padding-left:10px">
                     <div id="FontScroll">
                         <ul class="line" style="margin-top:0">
@@ -194,18 +186,18 @@
         </table>
     </div>
 
-    <div class="history_order" style="display:none;">
+    <!--<div class="history_order">
         <div class="history-title">快捷订票</div>
         <ul class="history-list">
             <li>
                     <a href="http://guangyunbus.com/index.php/Index/step3/from_city/1/to_city/2/from_zhan/128/to_zhan/18">
                         <table>
                             <tbody><tr>
-                                <td class="text-center" style="width:8%"><img src="pic/start.png" alt=""></td><td>
+                                <td class="text-center" style="width:8%"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/start.png" alt=""></td><td>
                             </td><td>深大地铁站A3出口</td>
                             </tr>
                             <tr>
-                                <td class="text-center" style="width:8%"><img src="pic/end.png" alt=""></td><td>
+                                <td class="text-center" style="width:8%"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/end.png" alt=""></td><td>
                             </td><td>万胜围地铁口（海珠区）</td>
                             </tr>
                             </tbody></table>
@@ -214,17 +206,17 @@
                     <a href="http://guangyunbus.com/index.php/Index/step3/from_city/2/to_city/1/from_zhan/6/to_zhan/8">
                         <table>
                             <tbody><tr>
-                                <td class="text-center" style="width:8%"><img src="pic/start.png" alt=""></td><td>
+                                <td class="text-center" style="width:8%"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/start.png" alt=""></td><td>
                             </td><td>客村地铁B出口（海珠区）</td>
                             </tr>
                             <tr>
-                                <td class="text-center" style="width:8%"><img src="pic/end.png" alt=""></td><td>
+                                <td class="text-center" style="width:8%"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/end.png" alt=""></td><td>
                             </td><td>南山区/世界之窗</td>
                             </tr>
                             </tbody></table>
                     </a>
                 </li>        </ul>
-    </div>
+    </div>-->
 
 </div>
 
@@ -243,7 +235,7 @@
 		
 		var ajax_request = $.ajax({
 			type        : 'post',
-			url         : tmp_req_url,
+			url         : SERVER_URL,
 			timeout     : AJAX_TIMEOUT, 
 			async		: false,
 			data       : { 'request'   : JSON.stringify(post_data) },
@@ -252,7 +244,7 @@
 				window.location.href=data['url'];
 			},
 			error		:function(err){
-				alert("err:"+err);
+				alert("err:"+JSON.stringify(err));
 			}
 		})
 	}
@@ -287,16 +279,20 @@
 		post_data['start_date'] = start_date;
         var ajax_request = $.ajax({
 			type        : 'post',
-			url         : tmp_req_url,
+			url         : SERVER_URL,
 			timeout     : AJAX_TIMEOUT, 
 			async		: false,
 			data       : { 'request'   : JSON.stringify(post_data) },
 			dataType    : 'json',
 			success     : function(data) {
-				window.location.href=data['url'];
+				if(data['suc'] == 1){
+					window.location.href=data['url'];
+				}else{
+					alert(data['msg']);
+				}
 			},
 			error		:function(err){
-				alert("err:"+err);
+				alert("err:"+JSON.stringify(err));
 			}
 		})
     }
@@ -311,65 +307,7 @@
     }
 
 </script>
-
-<script>
-    (function($){
-        $.fn.FontScroll = function(options){
-            var d = {time: 3000,s: 'fontColor',num: 1}
-            var o = $.extend(d,options);
-
-            this.children('ul').addClass('line');
-            var _con = $('.line').eq(0);
-            var _conH = _con.height(); //滚动总高度
-            var _conChildH = _con.children().eq(0).height();//一次滚动高度
-            var _temp = _conChildH;  //临时变量
-            var _time = d.time;  //滚动间隔
-            var _s = d.s;  //滚动间隔
-
-
-            _con.clone().insertAfter(_con);//初始化克隆
-
-            //样式控制
-            var num = d.num;
-            var _p = this.find('li');
-            var allNum = _p.length;
-
-            _p.eq(num).addClass(_s);
-
-
-            var timeID = setInterval(Up,_time);
-            this.hover(function(){clearInterval(timeID)},function(){timeID = setInterval(Up,_time);});
-
-            function Up(){
-                _con.animate({marginTop: '-'+_conChildH});
-                //样式控制
-                _p.removeClass(_s);
-                num += 1;
-                _p.eq(num).addClass(_s);
-
-                if(_conH == _conChildH){
-                    _con.animate({marginTop: '-'+_conChildH},"normal",over);
-                } else {
-                    _conChildH += _temp;
-                }
-            }
-            function over(){
-                _con.attr("style",'margin-top:0');
-                _conChildH = _temp;
-                num = 1;
-                _p.removeClass(_s);
-                _p.eq(num).addClass(_s);
-            }
-        }
-    })(jQuery);
-
-    $('#FontScroll').FontScroll({time: 5000,num: 1});
-
-</script>
-
 <?php
 include 'nav_bar.php';
 ?>
-
-
 </body></html>

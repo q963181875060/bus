@@ -1,29 +1,15 @@
 <!DOCTYPE html>
-<html><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
-    <title>我的订单</title>
+    <title>合力巴士</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
-    <script src="js/hm.js"></script><script type="text/javascript" src="js/jquery-2.js"></script>
-    <script type="text/javascript" src="js/jquery-form.js"></script>
-    <script type="text/javascript" src="js/func.js"></script>
-    <link href="css/style.css" type="text/css" rel="stylesheet">
-    <!--swiper-->
-    <link href="css/swiper.css" rel="stylesheet" type="text/css">
-    <script>
-        var SITE_URL = "http://guangyunbus.com/";
-        var img_upload_url = 'http://guangyunbus.com/res/upload_file.php';
-    </script>
-
-	<script>
-var _hmt = _hmt || [];
-(function() {
-  var hm = document.createElement("script");
-  hm.src = "//hm.baidu.com/hm.js?7aa758070a07098e84e9dbec440b7866";
-  var s = document.getElementsByTagName("script")[0]; 
-  s.parentNode.insertBefore(hm, s);
-})();
-</script>
+	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jquery-2.js"></script>
+    <script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jquery-form.js"></script>
+    <script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/func.js"></script>
+	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jweixin-1.0.0.js"></script>
+    <link href="http://bus-1251514843.cosbj.myqcloud.com/css/style.css" rel="stylesheet" type="text/css">
 </head>
 <body class="member-body">
 <div id="lock" style="display: none">
@@ -42,7 +28,9 @@ var _hmt = _hmt || [];
 foreach($data as $book){
 	if($book['state'] == '正常'){
 		echo '<li class="li_normal">';
-	}else{
+	}else if($book['state'] == '待支付' || $book['state'] == '已取消'){
+		continue;
+	}else{//已退票，已过期, 待验票
 		echo '<li class="li_grey">';
 	}
 	
@@ -52,7 +40,7 @@ foreach($data as $book){
 				<tr>
 					<td colspan="3" class="from_to">
 						'.$book['from_city'].'
-						<img src="pic/arrow.png" style="width:35px;vertical-align:middle" alt="">
+						<img src="http://bus-1251514843.cosbj.myqcloud.com/bus/arrow.png" style="width:35px;vertical-align:middle" alt="">
 						'.$book['to_city'].'
 					</td>
 					<td>
@@ -123,7 +111,7 @@ foreach($data as $book){
 		echo	'</tr>
 
 				<tr><td colspan="4">
-					<img src="pic/gantan.png" style="width:20px;vertical-align:middle" alt=""> <span style="color:#ff5500">请您在规定的时间内按时乘车</span></td>
+					<img src="http://bus-1251514843.cosbj.myqcloud.com/bus/gantan.png" style="width:20px;vertical-align:middle" alt=""> <span style="color:#ff5500">请您在规定的时间内按时乘车</span></td>
 				</tr>        </tbody>
 			</table>
 			';
@@ -160,16 +148,21 @@ include 'nav_bar.php';
 
 
 <script>
-
-	var tmp_req_url = 'clientController.php';
+	var SERVER_URL = 'clientController.php';
 	var AJAX_TIMEOUT = 2000;
     var book_id = 0;
+	var is_halt = false;
+	
     function cancel_order(id) {
         book_id = id;
         $('#notice-box').show();
     }
 
     function cancel_order_do(){
+		if(is_halt == true){
+			return;
+		}
+		is_halt = true;
         if( !(book_id > 0) ) {
             alert('参数错误');
             return false;
@@ -180,18 +173,21 @@ include 'nav_bar.php';
 		
 		$.ajax({
             type        : 'post',
-            url         : tmp_req_url,
+            url         : SERVER_URL,
 			async		: false,
             data        : { 'request'   : JSON.stringify(post_data) },
             dataType    : 'json',
             success     : function(data) {
 				if(data['suc'] == 1){
+					alert('退票成功，已退款到您的账户，请注意查收');
 					window.location.href=data['url'];
 				}else{
 					alert(data['msg']);
 				}
-                
-            }
+            },
+			complete	: function(){
+				is_halt = false;
+			}
         })
     }
 </script></body></html>

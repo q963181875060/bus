@@ -1,29 +1,16 @@
 <!DOCTYPE html>
-<html><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
-    <title>选择上下车地点</title>
+    <title>合力巴士</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
-    <script src="js/hm.js"></script><script type="text/javascript" src="js/jquery-2.js"></script>
-    <script type="text/javascript" src="js/jquery-form.js"></script>
-    <script type="text/javascript" src="js/func.js"></script>
-    <link href="css/style.css" type="text/css" rel="stylesheet">
-    <!--swiper-->
-    <link href="css/swiper.css" rel="stylesheet" type="text/css">
-    <script>
-        var SITE_URL = "http://guangyunbus.com/";
-        var img_upload_url = 'http://guangyunbus.com/res/upload_file.php';
-    </script>
-
-	<script>
-var _hmt = _hmt || [];
-(function() {
-  var hm = document.createElement("script");
-  hm.src = "//hm.baidu.com/hm.js?7aa758070a07098e84e9dbec440b7866";
-  var s = document.getElementsByTagName("script")[0]; 
-  s.parentNode.insertBefore(hm, s);
-})();
-</script>
+	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jquery-2.js"></script>
+    <script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jquery-form.js"></script>
+    <script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/func.js"></script>
+	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jweixin-1.0.0.js"></script>
+    <link href="http://bus-1251514843.cosbj.myqcloud.com/css/style.css" rel="stylesheet" type="text/css">
+    
 </head>
 <body>
 <div id="lock" style="display: none">
@@ -57,9 +44,11 @@ var _hmt = _hmt || [];
 		$tmp_from_stops = split(">",$route['from_stops']);
 		$tmp_to_stops = split(">",$route['to_stops']);
 		foreach($tmp_from_stops as $tmp_from_stop){
-			$from_stops[$tmp_from_stop] = array();
+			if(!isset($from_stops[$tmp_from_stop])){
+				$from_stops[$tmp_from_stop] = array();
+			}
 			foreach($tmp_to_stops as $tmp_to_stop){			
-				$from_stops[$tmp_from_stop][] = $tmp_to_stop;
+				$from_stops[$tmp_from_stop][$tmp_to_stop] = '';
 				$to_stops[$tmp_to_stop] = '';
 			}
 		}
@@ -71,29 +60,25 @@ var _hmt = _hmt || [];
 			<td style="width:20px;text-align:center;padding: 0 5px" class="from_zhan">
 			</td>
 			<td style="width:20px;text-align:center;padding: 0 5px">
-				<img src="pic/up_start.png" alt="">
+				<img src="http://bus-1251514843.cosbj.myqcloud.com/bus/up_start.png" alt="">
 			</td>
 			<td>'.$key.'</td>
 		</tr>
 		<tr>
 			<td></td>
 			<td style="text-align:center;">
-				<img src="pic/spera-1.png" alt="">
+				<img src="http://bus-1251514843.cosbj.myqcloud.com/bus/spera-1.png" alt="">
 			</td>
 			<td></td>
 		</tr>';
 	}
 
 ?>
-		
-        <tr>
-            <td></td>
-            <td style="text-align:center;">
-                <img src="pic/spera-1.png" alt="">
-            </td>
-            <td></td>
-        </tr>
-
+	</tbody>
+	</table>
+	
+	<table class="stations" id="to_stops_table">
+        <tbody>
 <?php
 	foreach($to_stops as $key=>$value){
 		echo 
@@ -101,32 +86,28 @@ var _hmt = _hmt || [];
 			<td style="width:20px;text-align:center;padding: 0 5px" class="to_zhan">
 			</td>
 			<td style="width:20px;text-align:center;padding: 0 5px">
-				<img src="pic/down.png" alt=""> 
+				<img src="http://bus-1251514843.cosbj.myqcloud.com/bus/down.png" alt=""> 
 			</td>
 			<td>'.$key.'</td>
 		</tr>
 		<tr>
 			<td></td>
 			<td style="text-align:center;">
-				<img src="pic/spera-1.png" alt="">
+				<img src="http://bus-1251514843.cosbj.myqcloud.com/bus/spera-1.png" alt="">
 			</td>
 			<td></td>
 		</tr>';
 	}
-
 ?>
-	
-    </tbody></table>
-	
-	
-	
+		</tbody>
+	</table>
+   
     <form action="/index.php/Index/step3" id="form">
         <input name="from_zhan" value="" type="hidden">
         <input name="to_zhan" value="" type="hidden">
     </form>
 </div>
 <?php
-	echo "<input name='from_stops_str' value='".json_encode($from_stops)."' type='hidden'>";
 	if(count($from_stops) != 0){
 		echo '<div style="background:#ddd;padding:20px 10px">
 				<span class="button" onclick="lineSearch()">查 询</span>
@@ -139,25 +120,26 @@ var _hmt = _hmt || [];
 
 
 <script type="text/javascript">
-	var tmp_req_url = 'clientController.php';
+	var SERVER_URL = 'clientController.php';
 	var AJAX_TIMEOUT = 2000;
-	var from_stops = JSON.parse($.trim($('input[name="from_stops_str').val()));
+	var from_stops = JSON.parse('<?php echo json_encode($from_stops); ?>');
 
     function selectFromStation(op, from_zhan) {
         $('.from_zhan').html('');
 
-        $(op).find('.from_zhan').html('<img src="pic/station_select.png" alt="" />');
+        $(op).find('.from_zhan').html('<img src="http://bus-1251514843.cosbj.myqcloud.com/bus/station_select.png" alt="" />');
 
         $('input[name="from_zhan"]').val(from_zhan);
 		
 		var html ='';
-		for(var i=0;i<from_stops[from_zhan].length;i++){
+		for(var key in from_stops[from_zhan]){
 			html = html + 
-			'<tr onclick="selectToStation(this,\''+from_stops[from_zhan][i]+'\')"><td style="width:20px;text-align:center;padding: 0 5px" class="to_zhan">'+
-			'</td><td style="width:20px;text-align:center;padding: 0 5px"><img src="pic/down.png" alt=""></td><td>'+from_stops[from_zhan][i]+'</td></tr>'+
-			'<tr><td></td><td style="text-align:center;"><img src="pic/spera-1.png" alt=""></td><td></td></tr>';
+			'<tr onclick="selectToStation(this,\''+key+'\')"><td style="width:20px;text-align:center;padding: 0 5px" class="to_zhan">'+
+			'</td><td style="width:20px;text-align:center;padding: 0 5px"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/down.png" alt=""></td><td>'+key+'</td></tr>'+
+			'<tr><td></td><td style="text-align:center;"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/spera-1.png" alt=""></td><td></td></tr>';
 		}
-		$('#to_stops_tr').html(html);
+		
+		$('#to_stops_table').html(html);
 		$('.to_zhan').html('');
 		$('input[name="to_zhan"]').val('');
 		
@@ -166,7 +148,7 @@ var _hmt = _hmt || [];
     function selectToStation(op, to_zhan) {
         $('.to_zhan').html('');
 
-        $(op).find('.to_zhan').html('<img src="pic/station_select.png" alt="" />');
+        $(op).find('.to_zhan').html('<img src="http://bus-1251514843.cosbj.myqcloud.com/bus/station_select.png" alt="" />');
 
         $('input[name="to_zhan"]').val(to_zhan);
     }
@@ -192,7 +174,7 @@ var _hmt = _hmt || [];
 		post_data['to_stop'] = to_zhan;
 		$.ajax({
             type        : 'post',
-            url         : tmp_req_url,
+            url         : SERVER_URL,
 			async		: false,
             data        : { 'request'   : JSON.stringify(post_data) },
             dataType    : 'json',

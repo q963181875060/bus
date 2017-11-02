@@ -1,29 +1,15 @@
 <!DOCTYPE html>
-<html><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
-    <title>选择出发城市</title>
+    <title>合力巴士</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
-    <script src="js/hm.js"></script><script type="text/javascript" src="js/jquery-2.js"></script>
-    <script type="text/javascript" src="js/jquery-form.js"></script>
-    <script type="text/javascript" src="js/func.js"></script>
-    <link href="css/style.css" type="text/css" rel="stylesheet">
-    <!--swiper-->
-    <link href="css/swiper.css" rel="stylesheet" type="text/css">
-    <script>
-        var SITE_URL = "http://guangyunbus.com/";
-        var img_upload_url = 'http://guangyunbus.com/res/upload_file.php';
-    </script>
-
-	<script>
-var _hmt = _hmt || [];
-(function() {
-  var hm = document.createElement("script");
-  hm.src = "//hm.baidu.com/hm.js?7aa758070a07098e84e9dbec440b7866";
-  var s = document.getElementsByTagName("script")[0]; 
-  s.parentNode.insertBefore(hm, s);
-})();
-</script>
+	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jquery-2.js"></script>
+    <script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jquery-form.js"></script>
+    <script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/func.js"></script>
+	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jweixin-1.0.0.js"></script>
+    <link href="http://bus-1251514843.cosbj.myqcloud.com/css/style.css" rel="stylesheet" type="text/css">
 </head>
 <body>
 <div id="lock" style="display: none">
@@ -64,13 +50,8 @@ var _hmt = _hmt || [];
 	<?php
 		include 'logicController.php';
 		$data = get_select_city_data();
-		foreach($data as $city){
-			if($_SESSION['city_direction']==0){
-				echo '<li><a onclick="select_city(\''.$city['from_city'].'\')">'.$city['from_city'].'</a></li>';
-			}else{
-				echo '<li><a onclick="select_city(\''.$city['to_city'].'\')">'.$city['to_city'].'</a></li>';
-			}
-			
+		foreach($data as $key=>$value){
+			echo '<li><a onclick="select_city(\''.$key.'\')">'.$key.'</a></li>';
 		}
 	?> 
 </ul>
@@ -78,10 +59,10 @@ var _hmt = _hmt || [];
 <div class="clear" style="height:10px"></div>
 
 <script type="text/javascript">
+	var SERVER_URL = 'clientController.php';
+	var AJAX_TIMEOUT = 2000;
     var latitude = '';
     var longitude = '';
-	var tmp_req_url = 'clientController.php';
-	var AJAX_TIMEOUT = 2000;
 
 	function select_city(selected_city){
 		var post_data = {};	
@@ -90,7 +71,7 @@ var _hmt = _hmt || [];
 		
 		$.ajax({
             type        : 'post',
-            url         : tmp_req_url,
+            url         : SERVER_URL,
 			async		: false,
             data        : { 'request'   : JSON.stringify(post_data) },
             dataType    : 'json',
@@ -145,7 +126,7 @@ var _hmt = _hmt || [];
 		post_data['action'] = 'select_city_get_data';
         $.ajax({
             type        : 'post',
-            url         : tmp_req_url,
+            url         : SERVER_URL,
             data        : { 'request'   : JSON.stringify(post_data) },
             dataType    : 'json',
             success     : function(data) {
