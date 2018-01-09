@@ -30,7 +30,8 @@ if(isset($req['action'])){
 						$_SESSION['from_city'] = trim($req['from_city']);
 					}
 				}
-				$res  = array('url'=>'select_city.php');
+				//error_log('redirect to select city');
+				$res  = array('url'=>'select_city.php', 'suc'=>1, 'msg'=>"OK");
 				echo json_encode($res);
 				break;
 			case "goto_select_stop":
@@ -348,7 +349,7 @@ if(isset($req['action'])){
 					$exe_params[':price']=trim($price);	
 					$exe_params[':contact_mobile']=$result[0]['contact_mobile'];	
 					$exe_params[':state']='待支付';	
-					$exe_params[':user_coupon_id']=isset($req['user_coupon_id'])?$req['user_coupon_id']:'';	
+					$exe_params[':user_coupon_id']=isset($req['user_coupon_id'])?$req['user_coupon_id']:-1;	
 					$exe_params[':coupon_price']=isset($req['user_coupon_id'])?$coupon_price:0;
 					
 					
@@ -404,7 +405,7 @@ if(isset($req['action'])){
 				$msg = '';
 				try {
 					if(!isset($_SESSION['book_id'])){
-						throw new Exception("订单信息有误，请电话联系合力巴士");
+						throw new Exception("系统问题：订单信息有误，请电话联系合力巴士并提供付款截图");
 					}
 					
 					$dbh=new PDO($DBSTR,$user,$pass, array(PDO::ATTR_AUTOCOMMIT=>0)); #一定要关闭自动提交
@@ -423,7 +424,7 @@ if(isset($req['action'])){
 					$sth->execute($exe_params);
 					$affected_rows = $sth->rowCount();
 					if($affected_rows == 0){
-						throw new Exception("支付信息更新失败，请联系工作人员");
+						throw new Exception("系统问题：支付信息更新失败，请电话联系合力巴士并提供付款截图");
 					}
 					
 					
@@ -434,9 +435,24 @@ if(isset($req['action'])){
 					$sth->execute($exe_params);
 					$result = $sth->fetchAll(PDO::FETCH_ASSOC);
 					if(count($result) == 0){
-						throw new Exception("拉取订单信息失败，请联系工作人员");
+						throw new Exception("系统问题：拉取订单信息失败，请电话联系合力巴士并提供付款截图");
 					}
 					$book = $result[0];
+					
+					//设置代金券已使用
+					if($book['user_coupon_id'] != null && $book['user_coupon_id'] > 0){
+						$sql = "update user_coupon_table set state = '已使用', use_time=:use_time where user_coupon_id=:user_coupon_id";
+						$exe_params = array();
+						$exe_params[':use_time']=date("Y-m-d H:i:s");
+						$exe_params[':user_coupon_id']=$book['user_coupon_id'];
+						$sth = $dbh->prepare($sql);
+						$sth->execute($exe_params);
+						$affected_rows = $sth->rowCount();
+						if($affected_rows == 0){
+							throw new Exception("系统问题：代金券更新错误，请电话联系合力巴士并提供付款截图");
+						}
+					}
+					$dbh->commit();
 					
 					//发送成功购票模板消息
 					$data[] = array();
@@ -448,22 +464,6 @@ if(isset($req['action'])){
 					$data['result'] = '订单号'.$book['book_id'].'，验票码'.$book['verify_code'];
 					$data['remark'] = '请提前15分钟在上车点等候上车，如有问题请联系领队，电话为：'.$book['contact_mobile'];
 					send_book_ticket_template($data);
-					
-					//设置代金券已使用
-					if($book['user_coupon_id'] != null && $book['user_coupon_id'] != 0){
-						$sql = "update user_coupon_table set state = '已使用', use_time=:use_time where user_coupon_id=:user_coupon_id";
-						$exe_params = array();
-						$exe_params[':use_time']=date("Y-m-d H:i:s");
-						$exe_params[':user_coupon_id']=$book['user_coupon_id'];
-						$sth = $dbh->prepare($sql);
-						$sth->execute($exe_params);
-						$affected_rows = $sth->rowCount();
-						if($affected_rows == 0){
-							throw new Exception("代金券更新错误，请联系工作人员");
-						}
-					}
-					
-					$dbh->commit();
 					
 					$suc = 1;
 					$msg = '';

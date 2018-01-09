@@ -24,7 +24,8 @@
     <div class="header-title">
 		<?php
 			//如果没按正常流程到此页面，则跳转到首页
-			if(!isset($_SESSION['city_direction'])){
+			if(!isset($_SESSION['city_direction'])){\
+				error_log("no city direction");
 				Header("HTTP/1.1 303 See Other"); 
 				Header("Location: index.php"); 
 				exit; 

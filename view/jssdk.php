@@ -47,7 +47,7 @@ class JSSDK {
   //注意！此处使用了绝对路径！因此jsapi_ticket.php文件的路径不可更改。
   private function getJsApiTicket() {
     // jsapi_ticket 应该全局存储与更新，以下代码以写入到文件中做示例
-    $data = json_decode($this->get_php_file("/var/www/html/bus/view/jsapi_ticket.php"));
+    $data = json_decode($this->get_php_file("jsapi_ticket.php"));
     if ($data->expire_time < time()) {
       $accessToken = $this->getAccessToken();
       // 如果是企业号用以下 URL 获取 ticket
@@ -70,12 +70,13 @@ class JSSDK {
   //注意！此处使用了绝对路径！因此access_token.php文件的路径不可更改。
   public function getAccessToken() {
     // access_token 应该全局存储与更新，以下代码以写入到文件中做示例
-    $data = json_decode($this->get_php_file("/var/www/html/bus/view/access_token.php"));
+    $data = json_decode($this->get_php_file("access_token.php"));
     if ($data->expire_time < time()) {
       // 如果是企业号用以下URL获取access_token
       // $url = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$this->appId&corpsecret=$this->appSecret";
       $url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$this->appId&secret=$this->appSecret";
       $res = json_decode($this->httpGet($url));
+	  
       $access_token = $res->access_token;
       if ($access_token) {
         $data->expire_time = time() + 7000;
@@ -102,7 +103,7 @@ class JSSDK {
 
     $res = curl_exec($curl);
     curl_close($curl);
-
+	//error_log($res);
     return $res;
   }
 

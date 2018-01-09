@@ -1,7 +1,7 @@
 <?php
 $DBSTR = 'mysql:host=localhost;port=3306;dbname=bus';
 $user='root';      //数据库连接用户名
-$pass='920208';          //对应的密码
+$pass='OwenLiu92';          //对应的密码
 
 //test
 //appid = 'wxeb32137da1f48642';

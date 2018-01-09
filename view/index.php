@@ -241,6 +241,7 @@
 			data       : { 'request'   : JSON.stringify(post_data) },
 			dataType    : 'json',
 			success     : function(data) {
+				alert(data['url']);
 				window.location.href=data['url'];
 			},
 			error		:function(err){
