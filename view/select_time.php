@@ -10,6 +10,18 @@
     <script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/func.js"></script>
 	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jweixin-1.0.0.js"></script>
     <link href="http://bus-1251514843.cosbj.myqcloud.com/css/style.css" rel="stylesheet" type="text/css">
+	<script type="text/javascript">
+		// 对浏览器的UserAgent进行正则匹配，不含有微信独有标识的则为其他浏览器
+		var useragent = navigator.userAgent;
+		if (useragent.match(/MicroMessenger/i) != 'MicroMessenger') {
+			// 这里警告框会阻塞当前页面继续加载
+			alert('已禁止本次访问：您必须使用微信内置浏览器访问本页面！');
+			// 以下代码是用javascript强行关闭当前页面
+			var opened = window.open('about:blank', '_self');
+			opened.opener = null;
+			opened.close();
+		}
+	</script>
 	<?php
 		include "logicController.php";
 	?>
@@ -62,7 +74,7 @@
 <?php
 $routes = get_select_time_data();
 if(count($routes) == 0){
-	echo '无班次安排，请选择其他日期';
+	echo '尚未开始发售，只能提前一天预定哦';
 }
 ?>
 
@@ -72,10 +84,10 @@ if(count($routes) == 0){
 					
 <?php
 foreach($routes as $route_id=>$route){
-	echo '<li>
+	echo '<li onclick="select_time('.$route_id.','.$route['available_num'].')">
 			<table>
 			<tbody>
-    		<tr onclick="select_time('.$route_id.','.$route['available_num'].')">
+    		<tr>
                     <td style="width:10%;padding: 0 7px" class="text-center"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/clock.png" alt=""></td><td>
                     </td>
                     <td id="from_time_'.$route_id.'">'.$route['from_time'].'</td>
@@ -105,7 +117,7 @@ foreach($routes as $route_id=>$route){
                 </tr>
                 <tr>
                     <td class="text-center" style="width:10%"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/start.png" alt=""></td><td>
-                    </td><td>'.$_SESSION['from_stop'].'</td>
+                    </td><td style="width:50%">'.$_SESSION['from_stop'].'</td>
                 </tr>
                 <tr>
                     <td class="text-center" style="width:10%"><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/end.png" alt=""></td><td>

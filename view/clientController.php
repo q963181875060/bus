@@ -6,7 +6,10 @@ require_once 'wxpay/example/WxPay.JsApiPay.php';
 
 date_default_timezone_set('Asia/Shanghai');
 
-$req = json_decode( $_POST['request'],1);
+if(isset($_POST['request'])){
+	$req = json_decode($_POST['request'] ,1);
+}
+
 if(isset($req['action'])){
         switch ($req['action']){
 			//页面跳转
@@ -69,7 +72,7 @@ if(isset($req['action'])){
 				break;
 			
 			//逻辑处理
-			case "post_survey":
+			case "post_survey"://暂时弃用
 				try {					
 					$survey_sheet_name = $req['survey_sheet_name'];
 					$ps = $req['ps'];
@@ -88,7 +91,7 @@ if(isset($req['action'])){
 					$result = $sth->fetchAll(PDO::FETCH_ASSOC);
 					
 					if(count($result) != 0){
-						throw new Exception("已经提交，请勿重复提交");
+						throw new Exception("已经提交，请勿重复提交".$sth->errorInfo());
 					}
 					
 					$sql = "insert into survey_table (survey_sheet_name, user_id, problem_id, problem_title, problem_value) values ";
@@ -111,7 +114,7 @@ if(isset($req['action'])){
 					$sth->execute($exe_params);
 					$affected_rows = $sth->rowCount();
 					if($affected_rows == 0){
-						throw new Exception("提交调查问卷进入数据库失败，请稍后再试");
+						throw new Exception("提交调查问卷进入数据库失败，请稍后再试".$sth->errorInfo());
 					}
 					
 					//插入代金券进入数据库
@@ -126,7 +129,7 @@ if(isset($req['action'])){
 					$sth->execute($exe_params);
 					$affected_rows = $sth->rowCount();
 					if($affected_rows == 0){
-						throw new Exception("插入代金券进入数据库失败，请稍后再试");
+						throw new Exception("插入代金券进入数据库失败，请稍后再试".$sth->errorInfo());
 					}
 					
 					//发送赠送代金券模板消息
@@ -143,6 +146,7 @@ if(isset($req['action'])){
 					$dbh->rollback();
 					$suc = 0;
 					$msg = $e->getMessage();
+					error_log($msg);
 				}finally{
 					$dbh->setAttribute(PDO::ATTR_AUTOCOMMIT, 1);
 					$dbh = null;
@@ -153,8 +157,10 @@ if(isset($req['action'])){
 			case "cancel_book":
 				try {					
 					if(isset($req['book_id'])){
+						$dbh=new PDO($DBSTR,$user,$pass, array(PDO::ATTR_AUTOCOMMIT=>0)); #一定要关闭自动提交
+						$dbh->setAttribute(PDO::ATTR_ERRMODE,  PDO::ERRMODE_EXCEPTION); #开启异常模式
+						$dbh->beginTransaction();
 						
-						$dbh = new PDO ($DBSTR,$user,$pass); 
 						$sql = "update book_table set state='已退票', refund_time=:refund_time where user_id=:user_id and book_id=:book_id and state='正常'";
 						$exe_params = array();
 						$exe_params[':user_id']=$_SESSION['user_id'];
@@ -164,7 +170,7 @@ if(isset($req['action'])){
 						$sth->execute($exe_params);
 						$affected_rows = $sth->rowCount();
 						if($affected_rows == 0){
-							throw new Exception("更新数据库失败，请稍后再试");
+							throw new Exception("更新数据库失败，请稍后再试".$sth->errorInfo());
 						}
 						
 						$sql = "select * from book_table where book_id=:book_id";
@@ -174,13 +180,15 @@ if(isset($req['action'])){
 						$sth->execute($exe_params);
 						$result = $sth->fetchAll(PDO::FETCH_ASSOC);
 						if(count($result) == 0){
-							throw new Exception("获取数据库信息失败，请稍后再试");
+							throw new Exception("获取数据库信息失败，请稍后再试".$sth->errorInfo());
 						}
 						
 						//对用户的账户发起退款
-						$out_trade_no = $result[0]['book_id'];
-						$total_fee = (int)(((float)$result[0]['price'] * (int)$result[0]['ticket_num'] - (float)$result[0]['coupon_price'])*100);
+						$total_fee = round(($result[0]['price'] * $result[0]['ticket_num'] - $result[0]['coupon_price'])*100, 0);
+						
 						$refund_fee = round($total_fee*0.95, 0);
+						//error_log("total_fee:".$total_fee.'  refund_fee:'.$refund_fee);
+						$out_trade_no = $result[0]['book_id'];
 						$input = new WxPayRefund();
 						$input->SetOut_trade_no($out_trade_no);
 						$input->SetTotal_fee($total_fee);
@@ -196,37 +204,53 @@ if(isset($req['action'])){
 							$input->SetRefund_account('REFUND_SOURCE_RECHARGE_FUNDS');
 							$res = WxPayApi::refund($input);						
 						}
-						
 						if(!(isset($res['result_code']) && $res['result_code'] == 'SUCCESS')){
 							if(isset($res['err_code'])){
-								throw new Exception("退票失败，请联系工作人员 ".$res['err_code'].$res['err_code_des']);
+								throw new Exception($res['err_code'].$res['err_code_des']);
 							}else{
-								throw new Exception("退票失败，请联系工作人员 ".$res['return_msg']);
+								throw new Exception($res['return_msg']);
 							}
 						}
 						
+						
 						//发送成功退票模板消息
 						$data[] = array();
-						$data['user_id'] = trim($_SESSION['user_id']);
-						$data['first'] = '取消订单成功！';
-						$data['keyword1'] = $result[0]['book_id'];
-						$data['keyword2'] = '用户申请';
-						$data['keyword3'] = '￥' . round(((float)$refund_fee)/100,2);
-						$data['remark'] = '有疑问欢迎随时联系我们，欢迎下次乘坐合力巴士！';
-						send_cancel_ticket_template($data);
-					
+						$data['touser'] = $_SESSION['user_id'];
+						$data['template_id'] = 'hbnz0B3ws3q42XO-qgJg2ogGoYc1jQOWWdxk2HaXbdA';
+						$data['data'] = array();
+						$data['data']['first'] = array();
+						$data['data']['first']['value'] = '取消订单成功！';
+						$data['data']['first']['color'] = '#173177';
+						$data['data']['keyword1'] = array();
+						$data['data']['keyword1']['value'] = $result[0]['book_id'];
+						$data['data']['keyword2'] = array();
+						$data['data']['keyword2']['value'] = '用户申请';
+						$data['data']['keyword3'] = array();
+						$data['data']['keyword3']['value'] = '￥' . round(((float)$refund_fee)/100,2);
+						$data['data']['remark'] = array();
+						$data['data']['remark']['value'] = '有疑问欢迎随时联系我们，欢迎下次乘坐合力巴士！';
+						$template_res = json_decode(send_cancel_ticket_template($data), true);
+						if($template_res['errcode'] != 0){
+							throw new Exception($template_res['errmsg'] . " 系统问题：发送模板消息失败 ");
+						}
+						
+						
+						$dbh->commit();
 						$suc = 1;
 						$msg = '';
 					}else{
 						throw new Exception("参数提交错误，请稍候再试！");
 					}					
-				} catch (Exception $e) {
-					error_log($e->getMessage());
+				}catch (Exception $e) {
 					$suc = 0;
-					$msg = $e->getMessage();
-				}finally{
+					$dbh->rollback();
+					$msg = $e->getMessage() . ' 若退款失败，请电话联系合力巴士人工处理退款';
+					error_log($msg);
+				} finally{
+					$dbh->setAttribute(PDO::ATTR_AUTOCOMMIT, 1);
 					$dbh = null;
 				}
+				
 				$res  = array('url'=>'history.php','suc'=>$suc,'msg'=>$msg);
 				echo json_encode($res);
 				break;
@@ -240,7 +264,6 @@ if(isset($req['action'])){
 				
 					$dbh=new PDO($DBSTR,$user,$pass, array(PDO::ATTR_AUTOCOMMIT=>0)); #一定要关闭自动提交
 					$dbh->setAttribute(PDO::ATTR_ERRMODE,  PDO::ERRMODE_EXCEPTION); #开启异常模式
-					
 					$dbh->beginTransaction();
 					
 					//获取票的单价
@@ -257,8 +280,12 @@ if(isset($req['action'])){
 						}else{
 							$price = $result[0]['price'];
 						}
+						$from_times = $result[0]['from_times'];
+						$from_stops = $result[0]['from_stops'];
+						$to_stops = $result[0]['to_stops'];
+						$company_id=$result[0]['company_id'];
 					}else{
-						throw new Exception("班次错误");
+						throw new Exception("班次错误".$sth->errorInfo());
 					}
 				
 					if(isset($req['user_coupon_id'])){
@@ -274,7 +301,7 @@ if(isset($req['action'])){
 						if(count($result) != 0){
 							$coupon_price  = $result[0]['coupon_price'];
 						}else{
-							throw new Exception("代金券信息错误");
+							throw new Exception("代金券信息错误".$sth->errorInfo());
 						}
 					}else{//没用代金券
 						$coupon_price  = 0;
@@ -327,10 +354,10 @@ if(isset($req['action'])){
 					
 					//插入购票信息到book_table
 					$sql = "insert into book_table (user_id, route_id, start_date, from_time, from_city, to_city, from_stop, to_stop, 
-							submit_time, verify_code, is_special_ticket, ticket_num, price, contact_mobile, state, user_coupon_id, coupon_price)
+							submit_time, verify_code, is_special_ticket, ticket_num, price, contact_mobile, state, user_coupon_id, coupon_price, from_times, from_stops, to_stops, customer_mobile, company_id)
 						values (
 							:user_id, :route_id, :start_date, :from_time, :from_city, :to_city, :from_stop, :to_stop, 
-							:submit_time, :verify_code, :is_special_ticket, :ticket_num, :price, :contact_mobile, :state, :user_coupon_id, :coupon_price
+							:submit_time, :verify_code, :is_special_ticket, :ticket_num, :price, :contact_mobile, :state, :user_coupon_id, :coupon_price, :from_times, :from_stops, :to_stops, :customer_mobile, :company_id
 						)";
 					$exe_params = array();
 					$exe_params[':user_id']=trim($_SESSION['user_id']);	
@@ -351,13 +378,17 @@ if(isset($req['action'])){
 					$exe_params[':state']='待支付';	
 					$exe_params[':user_coupon_id']=isset($req['user_coupon_id'])?$req['user_coupon_id']:-1;	
 					$exe_params[':coupon_price']=isset($req['user_coupon_id'])?$coupon_price:0;
-					
+					$exe_params[':from_times']=$from_times;
+					$exe_params[':from_stops']=$from_stops;
+					$exe_params[':to_stops']=$to_stops;
+					$exe_params[':customer_mobile']=isset($req['customer_mobile'])?$req['customer_mobile']:"";
+					$exe_params[':company_id']=$company_id;
 					
 					$sth = $dbh->prepare($sql);
 					$sth->execute($exe_params);
 					$affected_rows = $sth->rowCount();
 					if($affected_rows == 0){
-						throw new Exception("购票信息提交失败，请稍后再试");
+						throw new Exception("购票信息提交失败，请稍后再试".$sth->errorInfo());
 					}
 				
 					$_SESSION['book_id'] = $dbh->lastInsertId('book_id');
@@ -369,21 +400,21 @@ if(isset($req['action'])){
 					
 					//②、统一下单
 					$input = new WxPayUnifiedOrder();
-					$input->SetBody("test");
-					$input->SetAttach("test");
+					$input->SetBody("车票");
+					$input->SetAttach("车票");
 					$input->SetOut_trade_no($_SESSION['book_id']);
 					$input->SetTotal_fee($total_price*100);
 					$input->SetTime_start(date("YmdHis"));
 					$input->SetTime_expire(date("YmdHis", time() + 600));
-					$input->SetGoods_tag("test");
+					$input->SetGoods_tag("车票");
 					$input->SetNotify_url("http://helibus.cn/bus/view/wechat_server.php");
 					$input->SetTrade_type("JSAPI");
 					$input->SetOpenid($openId);
 					$order = WxPayApi::unifiedOrder($input);
 					//echo '<font color="#f00"><b>统一下单支付单信息</b></font><br/>';
 					$jsApiParameters = $tools->GetJsApiParameters($order);
-					$dbh->commit();
 					
+					$dbh->commit();
 					$suc = 1;
 					$msg = $jsApiParameters;
 				} catch (Exception $e) {
@@ -413,7 +444,7 @@ if(isset($req['action'])){
 					
 					$dbh->beginTransaction();
 					
-					//插入购票信息到book_table
+					//更新购票信息到book_table
 					$sql = "update book_table set state='正常', buy_time=:buy_time where book_id=:book_id and user_id=:user_id and state='待支付'";
 					$exe_params = array();
 					$exe_params[':buy_time']=date("Y-m-d H:i:s");
@@ -424,7 +455,7 @@ if(isset($req['action'])){
 					$sth->execute($exe_params);
 					$affected_rows = $sth->rowCount();
 					if($affected_rows == 0){
-						throw new Exception("系统问题：支付信息更新失败，请电话联系合力巴士并提供付款截图");
+						throw new Exception("系统问题：支付信息更新失败，请电话联系合力巴士并提供付款截图".$sth->errorInfo());
 					}
 					
 					
@@ -435,7 +466,7 @@ if(isset($req['action'])){
 					$sth->execute($exe_params);
 					$result = $sth->fetchAll(PDO::FETCH_ASSOC);
 					if(count($result) == 0){
-						throw new Exception("系统问题：拉取订单信息失败，请电话联系合力巴士并提供付款截图");
+						throw new Exception("系统问题：拉取订单信息失败，请电话联系合力巴士并提供付款截图".$sth->errorInfo());
 					}
 					$book = $result[0];
 					
@@ -449,33 +480,48 @@ if(isset($req['action'])){
 						$sth->execute($exe_params);
 						$affected_rows = $sth->rowCount();
 						if($affected_rows == 0){
-							throw new Exception("系统问题：代金券更新错误，请电话联系合力巴士并提供付款截图");
+							throw new Exception("系统问题：代金券更新错误，请电话联系合力巴士并提供付款截图".$sth->errorInfo());
 						}
 					}
-					$dbh->commit();
+					
 					
 					//发送成功购票模板消息
 					$data[] = array();
-					$data['user_id'] = trim($book['user_id']);
-					$data['first'] = '恭喜购票成功！';
-					$data['productType'] = '上车地点';
-					$data['name'] = $book['from_stop'];
-					$data['time'] = $book['start_date'] . ' ' .$book['from_time'];
-					$data['result'] = '订单号'.$book['book_id'].'，验票码'.$book['verify_code'];
-					$data['remark'] = '请提前15分钟在上车点等候上车，如有问题请联系领队，电话为：'.$book['contact_mobile'];
-					send_book_ticket_template($data);
+					$data['touser'] = trim($book['user_id']);
+					$data['template_id'] = 'l5ZWuH55inMc7TvjzH0dbroefa0bKdf5eo4om__-FcY';
+					$data['data'] = array();
+					$data['data']['first'] = array();
+					$data['data']['first']['value'] = '恭喜购票成功！';
+					$data['data']['first']['color'] = '#173177';
+					$data['data']['productType'] = array();
+					$data['data']['productType']['value'] = '上车地点';
+					$data['data']['name'] = array();
+					$data['data']['name']['value'] = $book['from_stop'];
+					$data['data']['time'] = array();
+					$data['data']['time']['value'] = $book['start_date'] . ' ' .$book['from_time'];
+					$data['data']['result'] = array();
+					$data['data']['result']['value'] = '订单号'.$book['book_id'].'，验票码'.$book['verify_code'];
+					$data['data']['remark'] = array();
+					$data['data']['remark']['value'] = '请提前15分钟在上车点等候上车，如有问题请联系领队，电话为：'.$book['contact_mobile'];
+					$template_res = json_decode(send_book_ticket_template($data), true);
+					if($template_res['errcode'] != 0){
+						if($template_res['errcode'] != 43004){
+							//用户没有关注的时候订了票，就不发送失败信息了
+							throw new Exception($template_res['errcode'] . ' ' . $template_res['errmsg'] . " 系统问题：发送模板消息失败，若已经付款请电话联系合力巴士并提供付款截图");
+						}
+					}
 					
 					$suc = 1;
 					$msg = '';
+					$dbh->commit();
 				} catch (Exception $e) {
-					//error_log("roll_back");
 					$dbh->rollback();
 					$msg = $e->getMessage();
+					error_log($msg);
 					$suc = 0;
 				} finally{
 					$dbh->setAttribute(PDO::ATTR_AUTOCOMMIT, 1);
 					$dbh = null;
-					
 				}
 				
 				$res  = array('url'=>'history.php', 'suc'=>$suc, 'msg'=>$msg);
@@ -504,7 +550,7 @@ if(isset($req['action'])){
 					$sth->execute($exe_params);
 					$affected_rows = $sth->rowCount();
 					if($affected_rows == 0){
-						throw new Exception("取消订单失败");
+						throw new Exception("取消订单失败".$sth->errorInfo());
 					}
 					
 					$dbh->commit();
@@ -515,6 +561,7 @@ if(isset($req['action'])){
 					//error_log("roll_back");
 					$dbh->rollback();
 					$msg = $e->getMessage();
+					error_log($msg);
 					$suc = 0;
 				} finally{
 					$dbh->setAttribute(PDO::ATTR_AUTOCOMMIT, 1);
@@ -524,7 +571,37 @@ if(isset($req['action'])){
 				$res  = array('url'=>'history.php', 'suc'=>$suc, 'msg'=>$msg);
 				echo json_encode($res);
 				break;
-			case "change_customer":
+			case 'upload_position':
+				$suc = 0;
+				$msg = '';
+				try {
+					$dbh = new PDO ($DBSTR,$user,$pass); 
+					$sql = "insert into position_table (user_id, latitude, longitude, speed, timestamp) values (:user_id, :latitude, :longitude, :speed, :timestamp)";
+					$exe_params = array();
+					$exe_params[':user_id']=trim($_SESSION['user_id']);
+					$exe_params[':latitude']=trim($req['latitude']);
+					$exe_params[':longitude']=trim($req['longitude']);
+					$exe_params[':speed']=trim($req['speed']);
+					$exe_params[':timestamp']=time();
+					$sth = $dbh->prepare($sql);
+					$sth->execute($exe_params);
+					$affected_rows = $sth->rowCount();
+					if($affected_rows == 0){
+						throw new Exception($sth->errorInfo()."地理位置存储数据库失败");
+					}
+					$suc = 1;
+				} catch (Exception $e) {
+					$suc = 0;
+					$msg = $e->getMessage();
+					error_log($msg);
+				}finally{
+					$dbh = null;
+				}
+
+				$res  = array('suc'=>$suc, 'msg'=>$msg);
+				echo json_encode($res);
+				break;
+			case "change_customer"://这是添加乘客信息的逻辑，现在暂时弃用
 				try {					
 					$dbh=new PDO($DBSTR,$user,$pass, array(PDO::ATTR_AUTOCOMMIT=>0)); #一定要关闭自动提交
 					$dbh->setAttribute(PDO::ATTR_ERRMODE,  PDO::ERRMODE_EXCEPTION); #开启异常模式

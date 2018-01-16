@@ -5,6 +5,9 @@ require_once('jssdk.php');
 //判断openid是否存在
 date_default_timezone_set('Asia/Shanghai');	
 
+//unset($_SESSION['user_id']);
+//如果是从线上服务器跳转到测试服务器的，就直接信任user_id
+
 if(!isset($_SESSION['user_id']) || trim($_SESSION['user_id']) == ''){
 	if(isset($_GET['code'])){
 		$code = $_GET['code'];
@@ -19,10 +22,10 @@ if(!isset($_SESSION['user_id']) || trim($_SESSION['user_id']) == ''){
 			echo "微信登录失败";
 		}
 	}else{
-		echo "微信登录失败";
+		Header("HTTP/1.1 303 See Other"); 
+		Header("Location: https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx4ce4a40cebb5c909&redirect_uri=http%3a%2f%2fhelibus.cn%2fbus%2fview%2findex.php&response_type=code&scope=snsapi_base&state=STATE#wechat_redirect"); 
+		exit;
 	}
-}else{
-	//echo "微信登录成功".$_SESSION['user_id'];
 }
 
 
@@ -109,7 +112,7 @@ function get_select_time_data(){
 						from_city=:from_city1 and to_city=:to_city1 and start_date=:start_date1 and state in ('正常', '待支付', '待验票', '已过期', '已验票')
 					group by 
 						route_id, is_special_ticket
-				)tab2 on (tab1.route_id = tab2.route_id)
+				)tab2 on (tab1.route_id = tab2.route_id) order by from_times asc
 				";
 		$exe_params[':from_city']=trim($_SESSION['from_city']);
 		$exe_params[':to_city']=trim($_SESSION['to_city']);
@@ -201,6 +204,7 @@ function get_book_data(){
 		
 		$tmp_res = $sth->fetchAll(PDO::FETCH_ASSOC);
 		$routes = array();
+		$routes['customer_mobile'] = "";
 		foreach($tmp_res as $tmp){
 			if(!isset($routes['available_special_num'])){
 				$routes['available_special_num'] = $tmp['special_ticket_num'];
@@ -220,6 +224,20 @@ function get_book_data(){
 		
 		if($routes['available_special_num'] > $routes['available_num']){
 			$routes['available_special_num'] = $routes['available_num'];
+		}
+		
+		//将此用户上次订票时填写的手机号返回
+		$sql = "select customer_mobile from book_table where user_id=:user_id order by book_id desc";
+		$exe_params = array();
+		$exe_params[':user_id']=trim($_SESSION['user_id']);
+		
+		$sth = $dbh->prepare($sql);
+		$sth->execute($exe_params);
+		
+		$tmp_res = $sth->fetchAll(PDO::FETCH_ASSOC);
+		
+		if(count($tmp_res) != 0){
+			$routes['customer_mobile'] = $tmp_res[0]['customer_mobile'];
 		}
 		
 		$result = $routes;
@@ -253,7 +271,7 @@ function get_history_data(){
 					(str_to_date(start_date,'%Y-%m-%d') = str_to_date(:start_date1,'%Y-%m-%d')
 						and time_to_sec(from_time) <= time_to_sec(:from_time)))*/
 		$sql = "update book_table set state='已过期' 
-					where user_id=:user_id and state='正常' and 
+					where user_id=:user_id and state in ('正常','待验票') and 
 					UNIX_TIMESTAMP(concat(start_date, ' ', from_time)) <= UNIX_TIMESTAMP(:current_time)";
 		$exe_params = array();
 		$exe_params[':user_id']=$_SESSION['user_id'];

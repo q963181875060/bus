@@ -16,32 +16,10 @@ function send_book_ticket_template($data){
 	$accessToken = $jssdk->getAccessToken();
 	
 	$url = 'https://api.weixin.qq.com/cgi-bin/message/template/send?access_token='.$accessToken;
-	$data = '  {
-           "touser":"'.$data['user_id'].'",
-           "template_id":"l5ZWuH55inMc7TvjzH0dbroefa0bKdf5eo4om__-FcY",
-           "data":{
-                   "first": {
-                       "value":"'.$data['first'].'",
-                       "color":"#173177"
-                   },
-				   "productType": {
-                       "value":"'.$data['productType'].'"
-                   },
-				   "name": {
-                       "value":"'.$data['name'].'"
-                   },
-				   "time": {
-                       "value":"'.$data['time'].'"
-                   },
-				   "result": {
-                       "value":"'.$data['result'].'"
-                   },
-				   "remark": {
-                       "value":"'.$data['remark'].'"
-                   }
-           }
-       }';
-	httpPost($url,$data);
+	$post_data = json_encode($data);
+	//error_log($post_data);
+	$res = httpPost($url,$post_data);
+	return $res;
 }
 
 function send_cancel_ticket_template($data){
@@ -50,32 +28,13 @@ function send_cancel_ticket_template($data){
 	$accessToken = $jssdk->getAccessToken();
 	
 	$url = 'https://api.weixin.qq.com/cgi-bin/message/template/send?access_token='.$accessToken;
-	$data = '  {
-           "touser":"'.$data['user_id'].'",
-           "template_id":"hbnz0B3ws3q42XO-qgJg2ogGoYc1jQOWWdxk2HaXbdA",
-           "data":{
-                   "first": {
-                       "value":"'.$data['first'].'",
-                       "color":"#173177"
-                   },
-				   "keyword1": {
-                       "value":"'.$data['keyword1'].'"
-                   },
-				   "keyword2": {
-                       "value":"'.$data['keyword2'].'"
-                   },
-				   "keyword3": {
-                       "value":"'.$data['keyword3'].'"
-                   },
-				   "remark": {
-                       "value":"'.$data['remark'].'"
-                   }
-           }
-       }';
-	httpPost($url,$data);
+	$post_data = json_encode($data);
+	//error_log($post_data);
+	$res = httpPost($url,$post_data);
+	return $res;
 }
 
-function send_get_coupon_template($data){
+function send_get_coupon_template($data){//暂时废弃
 	global $appid, $secret;
 	$jssdk = new JSSDK($appid, $secret);
 	$accessToken = $jssdk->getAccessToken();
@@ -91,6 +50,8 @@ function send_get_coupon_template($data){
                    }
            }
        }';
+	$res = httpPost($url,$post_data);
+	return $res;
 	httpPost($url,$data);
 }
 
@@ -101,19 +62,23 @@ function send_admin_template($user_ids, $data){
 	
 	$url = 'https://api.weixin.qq.com/cgi-bin/message/template/send?access_token='.$accessToken;
 	
+	$msg = '';
 	foreach($user_ids as $key=>$user){
-		$params = '  {
-           "touser":"'.$user.'",
-           "template_id":"adTzgdsVsiYdbFOGvw6H9RKTfn0Dhkfz6D7JSESWmQ8",
-           "data":{
-                   "first": {
-                       "value":"'.$data['first'].'",
-                       "color":"#173177"
-                   }
-           }
-       }';
-		httpPost($url,$params);
+	    $params[] = array();
+		$params['touser'] = $user;
+		$params['template_id'] = 'thTdNDSslKPpxY-4-NnE76K9-u_5viB0RFcDIpOdnJs';
+		$params['data'] = $data;
+		$post_data = json_encode($params);
+		$res = httpPost($url,$post_data);
+		$template_res = json_decode($res, true);
+		if($template_res['errcode'] != 0){
+			$msg = $msg . $user . $template_res['errmsg'] . ',';
+		}
 	}
+	if($msg != ''){
+		$msg = $msg . '发送失败';
+	}
+	return $msg;
 }
 
 

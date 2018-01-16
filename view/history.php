@@ -10,6 +10,19 @@
     <script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/func.js"></script>
 	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jweixin-1.0.0.js"></script>
     <link href="http://bus-1251514843.cosbj.myqcloud.com/css/style.css" rel="stylesheet" type="text/css">
+	<script type="text/javascript">
+		// 对浏览器的UserAgent进行正则匹配，不含有微信独有标识的则为其他浏览器
+		var useragent = navigator.userAgent;
+		if (useragent.match(/MicroMessenger/i) != 'MicroMessenger') {
+			// 这里警告框会阻塞当前页面继续加载
+			alert('已禁止本次访问：您必须使用微信内置浏览器访问本页面！');
+			// 以下代码是用javascript强行关闭当前页面
+			var opened = window.open('about:blank', '_self');
+			opened.opener = null;
+			opened.close();
+		}
+	</script>
+	
 </head>
 <body class="member-body">
 <div id="lock" style="display: none">
@@ -62,7 +75,7 @@ foreach($data as $book){
 							'.$book['verify_code'].'
 						</td>
 					</tr>        <tr>
-					<td>乘车站点</td>
+					<td style="width:25%">乘车站点</td>
 					<td colspan="3">
 						'.$book['from_stop'].'
 					</td>
@@ -111,7 +124,7 @@ foreach($data as $book){
 		echo	'</tr>
 
 				<tr><td colspan="4">
-					<img src="http://bus-1251514843.cosbj.myqcloud.com/bus/gantan.png" style="width:20px;vertical-align:middle" alt=""> <span style="color:#ff5500">请您在规定的时间内按时乘车</span></td>
+					<img src="http://bus-1251514843.cosbj.myqcloud.com/bus/gantan.png" style="width:20px;vertical-align:middle" alt=""> <span style="color:#ff5500">请提前15分钟等候上车，出发前1小时内不可退</span></td>
 				</tr>        </tbody>
 			</table>
 			';
@@ -183,11 +196,9 @@ include 'nav_bar.php';
 					window.location.href=data['url'];
 				}else{
 					alert(data['msg']);
+					is_halt = false;
 				}
-            },
-			complete	: function(){
-				is_halt = false;
-			}
+            }
         })
     }
 </script></body></html>

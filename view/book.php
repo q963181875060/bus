@@ -10,6 +10,18 @@
     <script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/func.js"></script>
 	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jweixin-1.0.0.js"></script>
     <link href="http://bus-1251514843.cosbj.myqcloud.com/css/style.css" rel="stylesheet" type="text/css">
+	<script type="text/javascript">
+		// 对浏览器的UserAgent进行正则匹配，不含有微信独有标识的则为其他浏览器
+		var useragent = navigator.userAgent;
+		if (useragent.match(/MicroMessenger/i) != 'MicroMessenger') {
+			// 这里警告框会阻塞当前页面继续加载
+			alert('已禁止本次访问：您必须使用微信内置浏览器访问本页面！');
+			// 以下代码是用javascript强行关闭当前页面
+			var opened = window.open('about:blank', '_self');
+			opened.opener = null;
+			opened.close();
+		}
+	</script>
 	<?php
 		require_once "logicController.php";
 		$data = get_book_data();
@@ -93,17 +105,6 @@
 			<input name="num" id="num" readonly="readonly" style="outline:none;border:1px solid #ccc;border-radius: 3px;background:#fff;height:32px;text-align:center;font-size:18px;vertical-align:middle" value="1" size="3" type="text">
 			<img src="http://bus-1251514843.cosbj.myqcloud.com/bus/image_btn_add.png" alt="" style="width:28px" onclick="plus()">
 		</li>
-		<li id="info_li">
-			<span>乘车人：</span><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/image_btn_add.png" alt="" style="width:28px" onclick="plus_customer()">
-			<br/>
-			<div id="customer_list">
-				刘贺 <span>370203199202085917</span>
-				<img style="width:28px;float:right" src="http://bus-1251514843.cosbj.myqcloud.com/bus/image_btn_add_press.png" alt="" onclick="minus()">
-				<br/>
-				刘贺 <span>370203199202085917</span>
-				<img style="width:28px;float:right" src="http://bus-1251514843.cosbj.myqcloud.com/bus/image_btn_add_press.png" alt="" onclick="minus()">
-			</div>
-		</li>
 
         <!--<li>
             <p style="margin-bottom:10px"><span>支付方式：</span></p>
@@ -119,7 +120,7 @@
                  </tbody>
 			</table>
         </li>-->
-		<li>
+		<li style="display:none">
             <p style="margin-bottom:10px"><span>使用代金券：</span></p>
             <table>
                 <tbody>
@@ -142,18 +143,20 @@
                  </tbody>
 			</table>
         </li>
-        <li style="display:none">
-            <p><span>预订人信息：</span></p>
+        <li>
+            <!--<p><span>预订人信息：</span></p>
             <p>
             <span>联系人：</span>
                 <input name="username" id="username" class="input" placeholder="姓名" value="" style="outline:none;border:1px solid #ccc;border-radius: 3px;background:#fff;height:32px; padding-left:12px;font-size:18px;vertical-align:middle" type="text">
             </p>
 
-            <p>
-            <span>手机号：</span>
-                <input name="phone" id="phone" class="input" placeholder="手机号码" value="" style="outline:none;border:1px solid #ccc;border-radius: 3px;background:#fff;height:32px; padding-left:12px;font-size:18px;vertical-align:middle" type="text">
+            <p>-->
+            <span>预定人手机号：</span>
+                <input name="customer_mobile" id="customer_mobile" class="input" placeholder="" value="<?php echo $data['customer_mobile'];?>" style="outline:none;border:1px solid #ccc;border-radius: 3px;background:#fff;height:32px; padding-left:12px;font-size:18px;vertical-align:middle" type="text">
             </p>
         </li>
+		 <li>
+		 </li>
         <!--<li style="dislay:none">
 			<table>
 				<tbody><tr>
@@ -238,31 +241,6 @@
 		})
 	})(jQuery);
 	
-			
-	function minus_customer(idx){
-		var len = (idx >= 0)?1:0;
-		customer_name_array.splice(idx, len);
-		customer_id_card_array.splice(idx, len);
-		var html = '';
-		
-		for(var i=0;i<customer_name_array.length;i++){
-			html = html + '<div>' + customer_name_array[i] + '<span> ' + customer_id_card_array[i] + '</span><img style="width:28px;float:right" src="http://bus-1251514843.cosbj.myqcloud.com/bus/image_btn_add_press.png" alt="" onclick="minus_customer(' + i + ')"><br/><div>';			
-		}
-		
-		$('#customer_list').html(html);
-		//alert($('#customer_list').html());
-		
-	}
-	
-	function plus_customer(){
-		var names_str = "";
-		var id_cards_str = "";
-		for(var i=0;i<customer_name_array.length;i++){
-			names_str = names_str + ((i==0)?"":">") + customer_name_array[i];
-			id_cards_str = id_cards_str + ((i==0)?"":">") + customer_id_card_array[i];
-		}
-		window.location.href='customer.php?customer_names='+names_str+'&customer_id_cards='+id_cards_str;
-	}
 	
 	 //调用微信JS api 支付
 	function jsApiCall()
@@ -286,10 +264,12 @@
 								window.location.href=data['url'];
 							}else{
 								alert(data['msg']);
+								is_halt = false;
 							}
 						},
 						error		:function(err){
 							alert("err:"+JSON.stringify(err));
+							is_halt = false;
 						}
 					})
 				}else{
@@ -329,9 +309,11 @@
 				}else{
 					alert(data['msg']);
 				}
+				is_halt = false;
 			},
 			error		:function(err){
 				alert("err:"+JSON.stringify(err));
+				is_halt = false;
 			}
 		})
 	}
@@ -349,22 +331,7 @@
 	var is_halt = false;
 	var jsApiParameters;
 	var GET = $.urlGet(); //获取URL的Get参数
-	var customer_name_array = new Array();
-	var customer_id_card_array = new Array();
 	
-	if(is_customer_info_needed == 1){
-		$('#no_info_li').hide();
-		$('#info_li').show();
-	}else{
-		$('#no_info_li').show();
-		$('#info_li').hide();
-	}
-	
-	if(typeof(GET['customer_names']) != "undefined" && typeof(GET['customer_id_cards']) != "undefined"){
-		customer_name_array = decodeURI(GET['customer_names']).trim().split(">"); 
-		customer_id_card_array = decodeURI(GET['customer_id_cards']).trim().split(">");
-	}
-	minus_customer(-1);
 	
 	var apiList = [
 		  // 所有要调用的 API 都要加到这个列表中
@@ -389,7 +356,7 @@
 				if(apiCheckList['onMenuShareTimeline']){
 					wx.onMenuShareTimeline({
 						title: '疯抢！<?php echo $_SESSION["from_city"];?>-<?php echo $_SESSION["to_city"];?> 大巴特价票低至'+data['special_price']+'元！不知道的亏大了！', // 分享标题
-						link: 'http://helibus.cn/bus/view/index.php', // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+						link: 'http://helibus.cn/bus/view/redirect_page.php', // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
 						imgUrl: 'http://bus-1251514843.cosbj.myqcloud.com/bus/firm-logo.jpg', // 分享图标
 						success: function(){
 							// 用户确认分享后执行的回调函数
@@ -460,13 +427,19 @@
 		
 	}
 	function buy_ticket(is_special_ticket, var_price){
-		if(is_halt == true){
-			return;
-		}
-		
 		calTotal();
 		if(num == 0){
 			alert("请购买至少一张车票");
+			return;
+		}
+		
+		var customer_mobile = $.trim($('input[name="customer_mobile"]').val());
+		if(customer_mobile.length == 0){
+			alert("为便于我们提供更好的服务，请填写11位手机号");
+			return;
+		}
+		if(customer_mobile.length != 11){
+			alert("手机号填写错误，请填写11位手机号");
 			return;
 		}
 		
@@ -491,15 +464,20 @@
 				 return;
 			}
 		}
+		
+		if(is_halt == true){
+			return;
+		}else{
+			$('#loading').show();
+			is_halt = true;
+		}
+		
 		var post_data = {};	
 		post_data['action'] = 'book_ticket';
 		post_data['is_special_ticket'] = is_special_ticket;
 		post_data['ticket_num'] = num;
-		
-		post_data['is_customer_info_needed'] = is_customer_info_needed;
-		//available only is_customer_info_needed = 1,现在is_customer_info_needed，customer_name_array，customer_id_card_array都没有在后台使用
-		post_data['customer_name_array'] = is_customer_info_needed;
-		post_data['customer_id_card_array'] = customer_id_card_array;
+		post_data['customer_mobile'] = customer_mobile;
+
 		
 		if((is_special_ticket == 0 && user_coupon_id != -1) || (is_special_ticket == 1 && is_special_available == 1 && user_coupon_id != -1)){
 			post_data['user_coupon_id'] = user_coupon_id;
@@ -511,10 +489,10 @@
 			async		: false,
 			data        : { 'request'   : JSON.stringify(post_data) },
 			dataType    : 'json',
-			beforeSend	: function(){
+			/*beforeSend	: function(){
 				$('#loading').show();
 				is_halt = true;
-			},
+			},*/
 			success     : function(data) {
 				if(data['suc'] == 1){
 					//window.location.href=data['url'];
@@ -523,9 +501,9 @@
 					
 				}else{
 					alert(data['msg']);
+					is_halt = false;
 				}
 				$('#loading').hide();
-				is_halt = false;
 			},
 			error		:function(err){
 				alert(JSON.stringify(err));

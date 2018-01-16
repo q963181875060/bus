@@ -11,7 +11,7 @@
 	<script type="text/javascript" src="http://bus-1251514843.cosbj.myqcloud.com/js/jweixin-1.0.0.js"></script>
     <link href="http://bus-1251514843.cosbj.myqcloud.com/css/style.css" rel="stylesheet" type="text/css">
 	
-	<!--<script type="text/javascript">
+	<script type="text/javascript">
 		// 对浏览器的UserAgent进行正则匹配，不含有微信独有标识的则为其他浏览器
 		var useragent = navigator.userAgent;
 		if (useragent.match(/MicroMessenger/i) != 'MicroMessenger') {
@@ -22,12 +22,13 @@
 			opened.opener = null;
 			opened.close();
 		}
-	</script>-->
+	</script>
 	
 	<?php
 		include "logicController.php";
 		$jssdk = new JSSDK($appid, $secret);
 		$signPackage = $jssdk->GetSignPackage();
+		
 	?>
     <script>
 		var SERVER_URL = 'clientController.php';
@@ -54,7 +55,7 @@
 				success: function(res) {
 					// 以键值对的形式返回，可用的api值true，不可用为false
 					// 如：{"checkResult":{"chooseImage":true},"errMsg":"checkJsApi:ok"}
-					/*
+					
 					apiCheckList = res['checkResult'];
 					if(apiCheckList['getLocation']){
 						wx.getLocation({
@@ -65,6 +66,7 @@
 								post_data['action'] = 'upload_position';
 								post_data['latitude'] = res.latitude; // 纬度，浮点数，范围为90 ~ -90
 								post_data['longitude'] = res.longitude; // 纬度，浮点数，范围为90 ~ -90
+								post_data['speed'] = res.speed; // 速度，以米/每秒计
 								
 								var ajax_request = $.ajax({
 									type        : 'post',
@@ -75,15 +77,15 @@
 									dataType    : 'json',
 									success     : function(data) {
 										if(data['suc'] != 1){
-											alert(data['msg']);
-										}else{
 											//alert(data['msg']);
+										}else{
+											//alert('suc');
 										}
 									}
 								})
 							}
 						});
-					}*/
+					}
 				}
 			});
 		  });
@@ -94,7 +96,7 @@
     <div id="shadow_loading"></div><div id="shadow_bg"></div>
 </div>
 
-<div><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/index_banner2.gif" alt=""></div>
+<div><img src="http://bus-1251514843.cosbj.myqcloud.com/bus/index_banner4.gif" alt=""></div>
 <div class="container">
 
     <div class="location-picker">
@@ -109,7 +111,7 @@
 							if(isset($_SESSION['from_city'])){
 								echo $_SESSION['from_city'];
 							}else{
-								$_SESSION['from_city'] = '青岛';
+								$_SESSION['from_city'] = '烟台';
 								echo $_SESSION['from_city'];
 							}
 						?> 
@@ -150,10 +152,15 @@
 							<?php
 								date_default_timezone_set('Asia/Shanghai');
 								$weekarray=array("日","一","二","三","四","五","六");							
+								$num_dates = 0;
 								for($i=0;$i<7;$i++){
-									echo '<option value="'.date('Y-m-d',strtotime('+'.$i.' day')).'" '. (($i==0)?'selected="selected"':'').'>'.
+									if(strtotime('+'.$i.' day') >= strtotime('2018-01-19')){
+										echo '<option value="'.date('Y-m-d',strtotime('+'.$i.' day')).'" '. (($i==0)?'selected="selected"':'').'>'.
 											date('Y-m-d',strtotime('+'.$i.' day')).' (星期'.$weekarray[date('w',strtotime('+'.$i.' day'))].')'.
-										'</option>';
+										 '</option>';
+										 $num_dates++;
+										 if($num_dates == 3) break;
+									}
 								}
 							?>
                                                   
@@ -241,7 +248,6 @@
 			data       : { 'request'   : JSON.stringify(post_data) },
 			dataType    : 'json',
 			success     : function(data) {
-				alert(data['url']);
 				window.location.href=data['url'];
 			},
 			error		:function(err){

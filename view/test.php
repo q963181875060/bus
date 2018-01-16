@@ -18,20 +18,12 @@ wx.config({
 </head>
 <body>
 <?php
-	if(isset($_GET['code'])){
-		$code = $_GET['code'];
-		$state = $_GET['state'];
-		$url='https://api.weixin.qq.com/sns/oauth2/access_token?appid=wxeb32137da1f48642&secret=08046d500bfec7e514a4fc63435a6c2f&code='.$code.'&grant_type=authorization_code';
-		
-		$html = file_get_contents($url);
-		$req = json_decode($html,1);
-		$openid=  $req['openid'];
-		echo $html;
-		
-		
-	}else{
-		print_r($_GET);
-	}
+	$obj = array();
+	$obj['first'] = 'val1';
+	$obj['second'] = array();
+	$obj['second']['s1'] = 's1';
+	$obj['second']['s2'] = 's2';
+	echo json_encode($obj);
 	
 ?> 
 
